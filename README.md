@@ -33,7 +33,7 @@ XFCE4
 Dark mode Hi dpi themes
 Some Wallpapers that will rotate every 10 minutes
 Mesa Delevel 26.2 Turnip from: github.com/lfdevs/mesa-for-android-container
-createdlt User created named "user" with password set as "root"
+User created named "user" with password set as "root"
 Firefox-esr is installed
 
 
