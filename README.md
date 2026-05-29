@@ -2,12 +2,13 @@
 A chroot for Android devices with turnip drivers
 
 
-## Download install script
+## Download and run install script
 ```bash
 
 curl -L -o ubuntu-backup.tar.gz \
   https://github.com/Dr4kzor/Chroot_Ubuntu/blob/main/install_ubuntu_chroot.sh
-
+chmod +x install_ubuntu_chroot.sh
+./install_ubuntu_chroot.sh
 
 ```
 
@@ -17,7 +18,7 @@ curl -L -o ubuntu-backup.tar.gz \
 
 curl -L -o ubuntu-backup.tar.gz \
   https://github.com/Dr4kzor/Chroot_Ubuntu/blob/main/uninstalllll_ubuntu_chroot.sh
-
+chmod +x uninstall_ubuntu_chroot.sh
 
 ```
 
@@ -26,10 +27,13 @@ curl -L -o ubuntu-backup.tar.gz \
 
 
 
-This Chroot contains:
+# This ROOTFS contains:
 Ubuntu 24.04
-Mesa from github.com/lfdevs/mesa-for-android-container
-a default User created named "user" with password set as "root"
+XFCE4
+Dark mode Hi dpi themes
+Some Wallpapers that will rotate every 10 minutes
+Mesa Delevel 26.2 Turnip from: github.com/lfdevs/mesa-for-android-container
+createdlt User created named "user" with password set as "root"
 Firefox-esr is installed
 
 
