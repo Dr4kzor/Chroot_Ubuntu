@@ -44,7 +44,7 @@ chmod +x uninstall_ubuntu_chroot.sh
 # IMPORTANT!
 ## Download and install Termux-X11 (Mandatory)
 github.com/termux/termux-x11
-# Set Termux-X11 display scale to 200%
+## Set Termux-X11 display scale to 200%
 
 ## Download and install Termux-Widget (Optional) makes it possible to add scripts with icons to homescreen
 github.com/termux/termux-widget
