@@ -52,7 +52,7 @@ echo
 ## Remove load script and installer
 echo "Removing installer script and temporary load script"
 rm 4-load_ubuntu_snapshot.sh
-#rm install_ubuntu_chroot.sh
+rm install_ubuntu_chroot.sh
 echo
 echo
 
