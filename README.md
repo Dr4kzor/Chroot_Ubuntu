@@ -2,11 +2,24 @@
 A chroot for Android devices with turnip drivers
 
 
+## Download install script
+```bash
 
-For first time installations you should read the information bellow.
+curl -L -o ubuntu-backup.tar.gz \
+  https://github.com/Dr4kzor/Chroot_Ubuntu/blob/main/install_ubuntu_chroot.sh
 
 
+```
 
+
+## Download Uninstall Script
+```bash
+
+curl -L -o ubuntu-backup.tar.gz \
+  https://github.com/Dr4kzor/Chroot_Ubuntu/blob/main/uninstalllll_ubuntu_chroot.sh
+
+
+```
 
 
 
