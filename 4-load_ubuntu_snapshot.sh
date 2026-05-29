@@ -4,7 +4,9 @@ apt update
 apt upgrade
 termux-setup-storage
 ## Install dependencies of chroot Ubuntu
-apt install tsu x11-repo termux-x11-nightly pulseaudio mount-utils
+apt install tsu x11-repo
+apt install termux-x11-nightly pulseaudio mount-utils
+
 
 ## Kill if running by some weird reason
 pkill -f xfce
