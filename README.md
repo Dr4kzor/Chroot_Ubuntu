@@ -23,8 +23,20 @@ chmod +x uninstall_ubuntu_chroot.sh
 ```
 
 
+## IMPORTANT!
+# Download and install Termux-X11 (Mandatory)
+github.com/termux/termux-x11
 
+# Download and install Termux-Widget (Optional) makes it possible to add scripts with icons to homescreen
+github.com/termux/termux-widget
+(In LineageOS icons work as a 1x1 icon, in OxigenOS termux-widget can only add a list instead of individual icons)
 
+Available shortcuts:
+Start Ubuntu
+Safe Mode (no android binds and root user as CMD)
+Save a snapshot of your system (Logout first!)
+Load Ubuntu from the default snapshot name in termux home dir
+Refresh rate changes, setting minimum and maximum
 
 
 # This ROOTFS contains:
@@ -37,18 +49,33 @@ User created named "user" with password set as "root"
 Firefox-esr is installed
 
 
-1 - To create the container and load it first run: "./.shortcuts/4-load_ubuntu_snapshot.sh" script (This will install dependencies create /data/local/ubuntu and move all file inside this folder)
 
-For a quick test you can run "./.shortcuts/1-ubuntu.sh" and check that everything works
-If you want to use the cmd "su" you as a use you must run "sudo su" instead of just "su"
+# To run SU command:
+If you want to use the cmd "su" you must run "sudo su" instead of just "su"
 
-2 - If you want to rename the default user as well as change its default password ("root") you should follow the next steps
 
-3 - After Ubuntu load script finishes run "./.shortcuts/2-safe_mode.sh" (This can also be used as a way to login as root without any android mounts)
 
-4 - While in Safe Mode run the script "rename_user.sh" present in home folder of root user
 
-5 - After your user has been renamed now you must manually edit the launch script indicating the new username.
+## You can save and load a snapshot of your container.
+# Load snapshot
+To Load a Snapshot of the container first run: "./.shortcuts/4-load_ubuntu_snapshot.sh" script (This will install dependencies create /data/local/ubuntu and move all file inside this folder)
+
+
+# Save snapshot
+run the script run "./.shortcuts/3-save_ubuntu_snapshot.sh" this will create a new backup in termux home dir and rename the older one into the same folder.
+
+
+
+
+## If you want to rename Default user:
+
+1 - If you want to rename the default user as well as change its default password ("root") you should follow the next steps
+
+2 - After Ubuntu load script finishes run "./.shortcuts/2-safe_mode.sh" (This can also be used as a way to login as root without any android mounts)
+
+3 - While in Safe Mode run the script "rename_user.sh" present in home folder of root user
+
+4 - After your user has been renamed now you must manually edit the launch script indicating the new username.
 While in termux as a normal user  run "nano .shortcuts/1-ubuntu.sh"
 
 Edit the following line: "export DEFINED_USERNAME=user"
@@ -57,4 +84,4 @@ Replace user with the exact new user name you just defined in the rename script
 
 Press Ctrl + X to save it under the same name as before.
 
-6 - If you want to save this changes you just made to the user and the startup script run "./.shortcuts/3-save_ubuntu_snapshot.sh" this will create a new backup in termux home dir and rename the older one into the same folder.
+For a quick test you can run "./.shortcuts/1-ubuntu.sh" and check that everything works
