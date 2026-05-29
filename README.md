@@ -1,5 +1,23 @@
 # Chroot_Ubuntu
-A chroot for Android devices with turnip drivers
+A chroot for Android devices with turnip drivers specifically tested for Snapdragon 8 Elite
+
+
+## This ROOTFS contains:
+Ubuntu 24.04
+
+XFCE4
+
+Dark mode Hi dpi themes
+
+Some Wallpapers that will rotate every 10 minutes
+
+Mesa Delevel 26.2 Turnip from: github.com/lfdevs/mesa-for-android-container
+
+User created named "user" with password set as "root"
+
+Firefox-esr is installed
+
+
 
 
 ## Download and run install script
@@ -26,6 +44,7 @@ chmod +x uninstall_ubuntu_chroot.sh
 # IMPORTANT!
 ## Download and install Termux-X11 (Mandatory)
 github.com/termux/termux-x11
+# Set Termux-X11 display scale to 200%
 
 ## Download and install Termux-Widget (Optional) makes it possible to add scripts with icons to homescreen
 github.com/termux/termux-widget
@@ -63,22 +82,6 @@ Press Ctrl + X to save it under the same name as before.
 
 For a quick test you can run "./.shortcuts/1-ubuntu.sh" and check that everything works
 
-
-
-# This ROOTFS contains:
-Ubuntu 24.04
-
-XFCE4
-
-Dark mode Hi dpi themes
-
-Some Wallpapers that will rotate every 10 minutes
-
-Mesa Delevel 26.2 Turnip from: github.com/lfdevs/mesa-for-android-container
-
-User created named "user" with password set as "root"
-
-Firefox-esr is installed
 
 
 
