@@ -23,11 +23,11 @@ chmod +x uninstall_ubuntu_chroot.sh
 ```
 
 
-## IMPORTANT!
-# Download and install Termux-X11 (Mandatory)
+# IMPORTANT!
+## Download and install Termux-X11 (Mandatory)
 github.com/termux/termux-x11
 
-# Download and install Termux-Widget (Optional) makes it possible to add scripts with icons to homescreen
+## Download and install Termux-Widget (Optional) makes it possible to add scripts with icons to homescreen
 github.com/termux/termux-widget
 (In LineageOS icons work as a 1x1 icon, in OxigenOS termux-widget can only add a list instead of individual icons)
 
@@ -50,24 +50,24 @@ Firefox-esr is installed
 
 
 
-# To run SU command:
+## To run SU command:
 If you want to use the cmd "su" you must run "sudo su" instead of just "su"
 
 
 
 
-## You can save and load a snapshot of your container.
-# Load snapshot
+# You can save and load a snapshot of your container.
+## Load snapshot
 To Load a Snapshot of the container first run: "./.shortcuts/4-load_ubuntu_snapshot.sh" script (This will install dependencies create /data/local/ubuntu and move all file inside this folder)
 
 
-# Save snapshot
+## Save snapshot
 run the script run "./.shortcuts/3-save_ubuntu_snapshot.sh" this will create a new backup in termux home dir and rename the older one into the same folder.
 
 
 
 
-## If you want to rename Default user:
+# If you want to rename Default user:
 
 1 - If you want to rename the default user as well as change its default password ("root") you should follow the next steps
 
