@@ -22,7 +22,9 @@ Firefox-esr is installed
 
 ## Download and run install script
 ```bash
-
+apt update
+apt upgrade
+apt install curl
 curl -L -o ubuntu-backup.tar.gz \
   https://github.com/Dr4kzor/Chroot_Ubuntu/blob/main/install_ubuntu_chroot.sh
 chmod +x install_ubuntu_chroot.sh
@@ -33,7 +35,9 @@ chmod +x install_ubuntu_chroot.sh
 
 ## Download Uninstall Script
 ```bash
-
+apt update
+apt upgrade
+apt install curl
 curl -L -o ubuntu-backup.tar.gz \
   https://github.com/Dr4kzor/Chroot_Ubuntu/blob/main/uninstalllll_ubuntu_chroot.sh
 chmod +x uninstall_ubuntu_chroot.sh
