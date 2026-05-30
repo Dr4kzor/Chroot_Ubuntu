@@ -18,6 +18,8 @@ User created named "user" with password set as "root"
 Firefox-esr is installed
 
 
+![Screenshot](Screenshot_20260530-011935_Termux_X11.png)
+
 
 
 ## Download and run install script
