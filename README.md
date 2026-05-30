@@ -1,4 +1,4 @@
-# Chroot_Ubuntu
+# Chroot_Ubuntu (ROOT REQUIRED!)
 A chroot for Android devices with turnip drivers specifically tested for Snapdragon 8 Elite
 
 
