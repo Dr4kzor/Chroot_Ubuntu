@@ -28,7 +28,7 @@ apt update
 apt upgrade
 apt install curl
 curl -L -o install_ubuntu_chroot.sh \
-  https://github.com/Dr4kzor/Chroot_Ubuntu/blob/main/install_ubuntu_chroot.sh
+  https://raw.githubusercontent.com/Dr4kzor/Chroot_Ubuntu/main/install_ubuntu_chroot.sh
 chmod +x install_ubuntu_chroot.sh
 ./install_ubuntu_chroot.sh
 
@@ -41,7 +41,7 @@ apt update
 apt upgrade
 apt install curl
 curl -L -o uninstalllll_ubuntu_chroot.sh \
-  https://github.com/Dr4kzor/Chroot_Ubuntu/blob/main/uninstalllll_ubuntu_chroot.sh
+  https://raw.githubusercontent.com/Dr4kzor/Chroot_Ubuntu/main/uninstal_ubuntu_chroot.sh
 chmod +x uninstall_ubuntu_chroot.sh
 
 ```
