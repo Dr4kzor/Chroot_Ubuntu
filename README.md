@@ -108,3 +108,10 @@ run the script run "./.shortcuts/3-save_ubuntu_snapshot.sh" this will create a n
 
 
 
+## Important mention.
+Snapdragon 8 Elite has no 32 bit cores, so box86 does not work as it translates X86 to arm32. It is still possible to run 32 bit apps with FEX.
+
+To download and install FEX please visite https://github.com/FEX-Emu/FEX/tree/main and follow their instructions. The installer will complete and throw 1 erro, however it will install and run successfully (still have to follow the instructions and download a rootfs for fex).
+
+
+
