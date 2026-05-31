@@ -4,7 +4,20 @@ apt update
 apt upgrade
 termux-setup-storage
 ## Install dependencies of chroot Ubuntu
-apt install tsu x11-repo
+apt install x11-repo
+
+## Try and detect if user has magisk or KernelSU
+if su -v 2>/dev/null | grep -qi magisk; then
+    echo "Magisk root"
+    apt install sudo
+elif su -v 2>/dev/null | grep -qi kernelsu; then
+    echo "KernelSU root"
+    apt install tsu
+else
+    echo "Unknown root solution or not rooted"
+fi
+
+
 apt install termux-x11-nightly pulseaudio mount-utils
 
 
