@@ -57,7 +57,11 @@ https://github.com/termux/termux-x11
 
 ## Download and install Termux-Widget (Optional) makes it possible to add scripts with icons to homescreen
 https://github.com/termux/termux-widget
+And for the icons to work you need to grant permissions to termux to display over apps
 (In LineageOS icons work as a 1x1 icon, in OxigenOS termux-widget can only add a list instead of individual icons)
+
+## If using KernelSU or KernelSU-NEXT you must manually set termux to root!
+if you manually installed sudo in termux, remove it and replace it for tsu. This tsu package works with magisk and KernelSU variations (it provides sudo)
 
 ### Available shortcuts:
 
