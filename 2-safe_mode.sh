@@ -14,13 +14,13 @@ unset LD_PRELOAD
         echo -e "Termux-x11 started"
 	echo ""
 	#sudo mount --bind $PREFIX/tmp/.X11-unix $ROOTFSPATH/tmp/.X11-unix
-	echo "Starting Box64Droid..."
+	echo "Starting Chroot Ubuntu SAFE MODE!"
         echo ""
 	sudo chroot $ROOTFSPATH /bin/su -
-	sudo umount $ROOTFSPATH/proc
-	sudo umount $ROOTFSPATH/sys
-	sudo umount $ROOTFSPATH/dev/pts
-	sudo umount $ROOTFSPATH/dev
+	#sudo umount $ROOTFSPATH/proc
+	#sudo umount $ROOTFSPATH/sys
+	#sudo umount $ROOTFSPATH/dev/pts
+	#sudo umount $ROOTFSPATH/dev
 	sudo umount $ROOTFSPATH/sdcard
 	sudo umount $ROOTFSPATH/tmp/.X11-unix
 	pkill -f "app_process / com.termux.x11"
