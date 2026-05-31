@@ -1,6 +1,13 @@
 # Chroot_Ubuntu (ROOT REQUIRED!)
 A chroot for Android devices with turnip drivers specifically tested for Snapdragon 8 Elite
 
+Known working CPUS so far:
+Snapdragon 8 Elite
+Snapdragon 870
+
+please let me know if you tested under a snapdragon cpu so I can add it to the list
+
+
 
 ## This ROOTFS contains:
 Ubuntu 24.04
