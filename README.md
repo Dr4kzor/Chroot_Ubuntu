@@ -18,7 +18,7 @@ Dark mode Hi dpi themes
 
 Some Wallpapers that will rotate every 10 minutes
 
-Mesa Delevel 26.2 Turnip from: github.com/lfdevs/mesa-for-android-container
+Mesa Delevel 26.2 Turnip from: https://github.com/lfdevs/mesa-for-android-container
 
 User created named "user" with password set as "root"
 
@@ -120,6 +120,9 @@ To Load a Snapshot of the container first run: "./.shortcuts/4-load_ubuntu_snaps
 run the script run "./.shortcuts/3-save_ubuntu_snapshot.sh" this will create a new backup in termux home dir and rename the older one into the same folder.
 
 
+## How to update Mesa
+run "./.shortcuts/2-safe_mode.sh"
+run "./update_mesa.sh"
 
 
 ## Important mention.
