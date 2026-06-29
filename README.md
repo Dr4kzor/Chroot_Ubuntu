@@ -28,7 +28,7 @@ Box64-Android is installed
 
 wine-staging_11.11~resolute-1_amd64 is installed
 
-![Screenshot](Screenshot_20260530-011935_Termux_X11.png)
+![Screenshot](Screenshot_20260629-210115_Termux_X11.png)
 
 
 
