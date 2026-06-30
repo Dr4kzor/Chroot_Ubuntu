@@ -50,7 +50,7 @@ chmod +x install_ubuntu_chroot.sh
 apt update
 apt upgrade
 apt install curl
-curl -L -o uninstal_ubuntu_chroot.sh \
+curl -L -o uninstall_ubuntu_chroot.sh \
   https://raw.githubusercontent.com/Dr4kzor/Chroot_Ubuntu/main/uninstal_ubuntu_chroot.sh
 chmod +x uninstall_ubuntu_chroot.sh
 
