@@ -5,8 +5,8 @@ apt upgrade
 termux-setup-storage
 ## Install dependencies of chroot Ubuntu
 apt install x11-repo
-apt remove sudo
-apt install tsu
+apt remove tsu
+apt install sudo
 
 
 
