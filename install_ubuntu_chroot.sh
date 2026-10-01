@@ -11,7 +11,9 @@ termux-setup-storage
 
 
 ## Install dependencies of chroot Ubuntu
-apt install tsu x11-repo
+## TSU replaced in favor of SUDO, note that TSU keeps env variables when we call sudo so it is not a 1 to 1 replacement!
+apt remove tsu
+apt install sudo x11-repo
 apt install termux-x11-nightly pulseaudio mount-utils
 
 
