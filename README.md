@@ -7,6 +7,13 @@ Here we use half the native screen resolution and glmark2 yields 2500 FPS to 300
 Here we use full native screen resolution and glmark2 yields 4300 FPS to 5500 FPS (you can reach 6000 FPS if you run apps directly avoiding using KDE)
 
 
+
+WIP:
+when I have more free time I will merge the installer to have a single version capable of installing updating and uninstalled both chroot instead of needing dedicated separate scripts.
+
+
+
+
 ## (1) TERMUX-X11 with XFCE4 preview (Half native screen resolution)
 ![Screenshot](Screenshot_20260629-210115_Termux_X11.png)
 
