@@ -174,7 +174,7 @@ chmod +x uninstall-anland.sh
 
 ## (2) - ANland setup
 Github repo: https://github.com/lfdevs/anland-termux
-our install script tries to install both termux-x11 anland and Android anland automatically, if it fails you can manually download them and install them
+our install script tries to install both anland and Android anland apk automatically, if it fails you can manually download them and install them
 after installation completes you can run anland_chroot inside termux to either: reinstall, update, update ANland apps, and uninstall.
 
 # (2) - ANland
