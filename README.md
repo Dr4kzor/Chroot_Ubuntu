@@ -172,6 +172,11 @@ chmod +x uninstall-anland.sh
 
 ```
 
+## (2) - ANland wine and mesa
+run update_mesa.sh to install the latest version
+run update_winr.sh to install wine or change wine version (by default wine container should survive an update or version change)
+
+
 ## (2) - ANland setup
 Github repo: https://github.com/lfdevs/anland-termux
 our install script tries to install both anland and Android anland apk automatically, if it fails you can manually download them and install them
