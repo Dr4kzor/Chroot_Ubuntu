@@ -156,7 +156,7 @@ apt install curl
 curl -L -o install_ubuntu_chroot.sh \
   https://raw.githubusercontent.com/Dr4kzor/Chroot_Ubuntu/main/install_ubuntu_anland.sh
 chmod +x install_ubuntu_chroot.sh
-./install_ubuntu_chroot.sh
+./install_ubuntu_anland.sh
 
 ```
 
@@ -168,7 +168,7 @@ apt upgrade
 apt install curl
 curl -L -o uninstall_ubuntu_chroot.sh \
   https://raw.githubusercontent.com/Dr4kzor/Chroot_Ubuntu/main/uninstall-anland.sh
-chmod +x uninstall_ubuntu_chroot.sh
+chmod +x uninstall-anland.sh
 
 ```
 
