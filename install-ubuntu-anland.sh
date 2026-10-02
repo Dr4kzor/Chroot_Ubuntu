@@ -80,10 +80,10 @@ RESTORE
  chmod 755 "$HOME/.shortcuts/anland-restore-backup.sh"
 fi
 rm -f "$HOME/load-anland-snapshot.sh" "$HOME/uninstall-anland.sh"
-# Shortcuts use the command in bin instead of an executable in home.
+# Shortcuts call the installed launcher directly.
 for SHORTCUT in "$HOME"/.shortcuts/anland-*.sh; do
  [[ -f $SHORTCUT ]] || continue
- sed -i 's|/data/data/com.termux/files/home/anland |/data/data/com.termux/files/usr/bin/anland_chroot |g; s|/data/data/com.termux/files/home/anland$|/data/data/com.termux/files/usr/bin/anland_chroot run|; s|\./anland |anland_chroot |g' "$SHORTCUT"
+ sed -i 's#/data/data/com.termux/files/home/anland\([[:space:]]\|$\)#/data/data/com.termux/files/home/anland-termux/anland.sh\1#g; s#\./anland\([[:space:]]\|$\)#/data/data/com.termux/files/home/anland-termux/anland.sh\1#g' "$SHORTCUT"
 done
 rm -f "$HOME/anland" "$HOME/anland.sh"
 # Remove obsolete downloads and installer copies, keeping saved backups.
