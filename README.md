@@ -1,3 +1,12 @@
+# There are 2 CHROOTS available that you can install and test at the same time (no conflit between their configs)
+## (1) - CHROOT TERMUX-X11 with XFCE4 (battle tested and extremely stable but slower)
+Here we use half the native screen resolution and glmark2 yields 2500 FPS to 3000 FPS
+
+## (2) - CHROOT ANland with KDE (more recent but only tested for 2 days so far, no crashes or issues detected so far)
+Here we use full native screen resolution and glmark2 yields 5000 FPS to 6000 FPS
+
+
+
 # Chroot_Ubuntu (ROOT REQUIRED!)
 A chroot for Android devices with turnip drivers specifically tested for Snapdragon 8 Elite
 
