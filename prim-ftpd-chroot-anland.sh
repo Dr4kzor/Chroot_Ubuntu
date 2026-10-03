@@ -117,7 +117,7 @@ SYSTEM
 
 # Enable key authentication, preserving the password and all other settings.
 (unset LD_PRELOAD LD_LIBRARY_PATH; su -c "/system/bin/am force-stop --user '$ANDROID_USER' org.primftpd </dev/null >'$WORK/android.log' 2>&1")
-sudo cp "$PREFS" "$PREFS.before-keys-$(date +%s)"
+sudo test -f "$PREFS.before-keys" || sudo cp "$PREFS" "$PREFS.before-keys"
 sudo cat "$PREFS" | sed '/name="pubKeyAuthPref"/d; /<\/map>/i\    <boolean name="pubKeyAuthPref" value="true" />' > "$WORK/preferences.xml"
 sudo cp "$WORK/preferences.xml" "$PREFS"
 sudo chown "$APP_OWNER" "$PREFS"

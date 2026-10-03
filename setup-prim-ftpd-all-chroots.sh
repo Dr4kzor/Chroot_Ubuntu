@@ -1,23 +1,26 @@
 #!/data/data/com.termux/files/usr/bin/bash
-# Run in Termux AFTER the Android and chroot installations.
-# Enable authenticated, passwordless file-manager access for both desktops.
+# Reusable FTP setup: Android plus termux-x11, anland, or both (the default).
 set -euo pipefail
 SCRIPT_DIR=$(cd -- "$(dirname -- "$0")" && pwd)
+TARGET=${1:-both}
+case $TARGET in termux-x11|anland|both) ;; *) echo 'Choose termux-x11, anland or both.'; exit 1 ;; esac
 [[ $HOME == /data/data/com.termux/files/home ]] || { echo 'Run this script in Termux.'; exit 1; }
 for FILE in install-prim-ftpd-android.sh prim-ftpd-chroot-termux-x11.sh prim-ftpd-chroot-anland.sh; do
  [[ -f $SCRIPT_DIR/$FILE ]] || { echo "Place $FILE beside this script."; exit 1; }
 done
-# Preserve a configured Android server and its password. Fresh setups use the
-# Android installer first; it downloads the latest release and asks for a password.
-ANDROID_USER=$( (unset LD_PRELOAD LD_LIBRARY_PATH; su -c '/system/bin/am get-current-user </dev/null 2>&1') | tr -d '\r')
-[[ $ANDROID_USER =~ ^[0-9]+$ ]] || { echo 'Cannot determine the Android user.'; exit 1; }
-PREFS="/data/user/$ANDROID_USER/org.primftpd/shared_prefs/org.primftpd_preferences.xml"
-if ! sudo test -f "$PREFS" || ! sudo grep -q 'name="bindIpPref">127.0.0.1<' "$PREFS"; then
- bash "$SCRIPT_DIR/install-prim-ftpd-android.sh"
-fi
-
-if sudo test -d /data/local/ubuntu/etc; then
- # Published images use user. Also support an already-renamed installation.
+# Avoid concurrent changes to Android preferences and the shared authorized keys.
+exec 9>"$PREFIX/tmp/prim-ftpd-setup.lock"
+flock -n 9 || { echo 'Another FTP setup is running. Try again when it finishes.'; exit 1; }
+apt install -y sudo
+X11=no
+ANLAND=no
+if [[ $TARGET != anland ]] && sudo test -d /data/local/ubuntu/etc; then X11=yes; fi
+if [[ $TARGET != termux-x11 ]] && sudo test -d /data/local/anland-ubuntu26/etc; then ANLAND=yes; fi
+[[ $X11 == yes || $ANLAND == yes ]] || { echo 'Install the selected Ubuntu chroot first.'; exit 1; }
+# Install Android if missing. Otherwise repair settings/permissions without
+# reinstalling the APK, changing the password, or removing authorized keys.
+bash "$SCRIPT_DIR/install-prim-ftpd-android.sh" --configure-only
+if [[ $X11 == yes ]]; then
  X11_USER=${CHROOT_X11_USER:-user}
  if ! sudo grep -q "^$X11_USER:" /data/local/ubuntu/etc/passwd; then
   X11_USER=$(sudo cat /data/local/ubuntu/etc/passwd | while IFS=: read -r NAME PASSWORD ACCOUNT_UID ACCOUNT_GID DESCRIPTION ACCOUNT_HOME ACCOUNT_SHELL; do
@@ -28,12 +31,8 @@ if sudo test -d /data/local/ubuntu/etc; then
   done)
  fi
  CHROOT_USER="$X11_USER" bash "$SCRIPT_DIR/prim-ftpd-chroot-termux-x11.sh"
-else
- echo 'Termux-X11 Ubuntu is not installed; skipped.'
 fi
-if sudo test -d /data/local/anland-ubuntu26/etc; then
- bash "$SCRIPT_DIR/prim-ftpd-chroot-anland.sh"
-else
- echo 'AnLand Ubuntu is not installed; skipped.'
-fi
-printf '\nSetup complete. Open Android Storage (SFTP) in Thunar or Dolphin.\nKeep Primitive FTPd running in Android. SSH keys replace password prompts.\n'
+if [[ $ANLAND == yes ]]; then bash "$SCRIPT_DIR/prim-ftpd-chroot-anland.sh"; fi
+if [[ $TARGET == both && $X11 == no ]]; then echo 'Termux-X11 Ubuntu is not installed; skipped.'; fi
+if [[ $TARGET == both && $ANLAND == no ]]; then echo 'AnLand Ubuntu is not installed; skipped.'; fi
+printf '\nFTP setup complete. Open Android Storage in the selected desktop.\nExisting passwords and keys were kept. Primitive FTPd must remain running.\n'

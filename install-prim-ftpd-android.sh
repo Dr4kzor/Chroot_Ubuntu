@@ -7,9 +7,8 @@ REPO=https://github.com/wolpi/prim-ftpd
 API=https://api.github.com/repos/wolpi/prim-ftpd/releases/latest
 PACKAGE=org.primftpd
 # Both chroots share Android's network, so neither needs a port forward.
-SERVER_USER=user
-SERVER_PORT=1234
-SERVER_DIRECTORY=/storage/emulated/0
+MODE=${1:-install}
+case $MODE in install|--configure-only) ;; *) echo 'Usage: install-prim-ftpd-android.sh [--configure-only]'; exit 1 ;; esac
 apt install -y curl openssl-tool coreutils sudo
 WORK=$(mktemp -d "$PREFIX/tmp/prim-ftpd.XXXXXX")
 trap 'rm -rf "$WORK"' EXIT
@@ -22,6 +21,7 @@ android() {
  sudo cat "$WORK/android.log"
  return "$RESULT"
 }
+if [[ $MODE != --configure-only ]] || ! android "/system/bin/pm path '$PACKAGE'" | grep -q '^package:'; then
 echo "Repository: $REPO"
 curl -fL --retry 3 "$API" -o "$WORK/release.json"
 NAME= DIGEST= URL= TAG=
@@ -47,24 +47,41 @@ echo "Downloading $URL"
 curl -fL --retry 3 "$URL" -o "$WORK/prim-ftpd.apk"
 printf '%s  %s\n' "${DIGEST#sha256:}" "$WORK/prim-ftpd.apk" | sha256sum -c -
 android "/system/bin/pm install -r '$WORK/prim-ftpd.apk'"
+fi
 ANDROID_USER=$(android '/system/bin/am get-current-user')
 [[ $ANDROID_USER =~ ^[0-9]+$ ]] || { echo 'Cannot determine the Android user.'; exit 1; }
 APP_DIR="/data/user/$ANDROID_USER/$PACKAGE"
 PREFS="$APP_DIR/shared_prefs/${PACKAGE}_preferences.xml"
-if sudo test -f "$PREFS"; then
- read -r -p 'Configure the existing FTPd app for local SFTP? Existing preferences will be backed up. [y/N] ' ANSWER
- [[ $ANSWER == [yY] || $ANSWER == [yY][eE][sS] ]] || exit 0
-fi
+sudo cat "$PREFS" > "$WORK/existing.xml" 2>/dev/null || printf '<map></map>\n' > "$WORK/existing.xml"
+read_setting() {
+ sed -n "s|.*<string name=\"$1\">\(.*\)</string>.*|\1|p" "$WORK/existing.xml" |
+  sed 's/&lt;/</g; s/&gt;/>/g; s/&quot;/"/g; s/&apos;/'"'"'/g; s/&amp;/\&/g'
+}
+SERVER_USER=$(read_setting userNamePref)
+SERVER_PORT=$(read_setting securePortPref)
+SERVER_DIRECTORY=$(read_setting startDirPref)
+PASSWORD_HASH=$(read_setting passwordPref)
+SERVER_USER=${SERVER_USER:-user}
+SERVER_PORT=${SERVER_PORT:-1234}
+SERVER_DIRECTORY=${SERVER_DIRECTORY:-/storage/emulated/$ANDROID_USER}
+[[ $SERVER_USER =~ ^[a-zA-Z0-9_-]+$ && $SERVER_PORT =~ ^[0-9]+$ && $SERVER_DIRECTORY == /* ]] || {
+ echo 'Invalid existing server settings; correct them in Primitive FTPd first.'; exit 1;
+}
 printf 'SFTP login: %s, address: 127.0.0.1:%s\n' "$SERVER_USER" "$SERVER_PORT"
+if [[ -z $PASSWORD_HASH ]]; then
 read -r -s -p 'Choose an SFTP password: ' PASSWORD; echo
 read -r -s -p 'Repeat password: ' CONFIRM; echo
 [[ -n $PASSWORD && $PASSWORD == "$CONFIRM" ]] || { echo 'Passwords must match and cannot be empty.'; exit 1; }
 # This is the app's native salted password hash, not an encoded script/file.
 PASSWORD_HASH=$(printf '%s%s' "$PASSWORD" 'H§R&q}9' | openssl dgst -sha512 -binary | openssl base64 -A)
 unset PASSWORD CONFIRM
+else
+ echo 'Keeping the existing password.'
+fi
+DIRECTORY_XML=$(printf '%s' "$SERVER_DIRECTORY" | sed 's/\&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g')
 android "/system/bin/am force-stop --user '$ANDROID_USER' '$PACKAGE'"
 if sudo test -f "$PREFS"; then
- sudo cp "$PREFS" "$PREFS.before-chroot-$(date +%s)"
+ sudo test -f "$PREFS.before-chroot" || sudo cp "$PREFS" "$PREFS.before-chroot"
  sudo cat "$PREFS" > "$WORK/preferences.xml"
 else
  printf '<?xml version="1.0" encoding="utf-8" standalone="yes" ?>\n<map>\n</map>\n' > "$WORK/preferences.xml"
@@ -83,7 +100,7 @@ cat >> "$WORK/preferences.xml" <<SETTINGS
     <string name="securePortPref">$SERVER_PORT</string>
     <string name="bindIpPref">127.0.0.1</string>
     <boolean name="chooseIpToBindToPref" value="false" />
-    <string name="startDirPref">$SERVER_DIRECTORY</string>
+    <string name="startDirPref">$DIRECTORY_XML</string>
     <string name="storageTypePref">1</string>
     <boolean name="startOnOpenPref" value="true" />
     <boolean name="startOnBootPref" value="false" />
@@ -108,8 +125,8 @@ if (( SDK >= 33 )); then
 fi
 android "/system/bin/am start --user '$ANDROID_USER' -n '$PACKAGE/.ui.MainTabsActivity'"
 for ((TRY=0; TRY<30; TRY++)); do
- if (exec 3<>/dev/tcp/127.0.0.1/1234) 2>/dev/null; then
-  echo 'SFTP is listening. Connect as user to sftp://127.0.0.1:1234/ with your chosen password.'
+ if (exec 3<>/dev/tcp/127.0.0.1/$SERVER_PORT) 2>/dev/null; then
+  echo "SFTP is listening on 127.0.0.1:$SERVER_PORT. Existing authorized keys were kept."
   exit 0
  fi
  sleep 1
