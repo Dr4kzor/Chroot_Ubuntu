@@ -1,6 +1,11 @@
-sudo -a -- "$PREFIX/bin/chroot" /data/local/ubuntu /bin/su - user -c '
+~ $ sudo -a -- "$PREFIX/bin/chroot" /data/local/ubuntu /bin/su - user -c '
   id
   cat /proc/self/attr/current
   grep -E "Seccomp|NoNewPrivs" /proc/self/status
   sftp -vvv -oBatchMode=yes android-storage-prim-ftpd
   '
+uid=1001(user) gid=1001(user) groups=1001(user),27(sudo),3003(inet)
+cat: /proc/self/attr/current: No such file or directory
+grep: /proc/self/status: No such file or directory
+Couldn't open /dev/null: No such file or directory
+~ $
