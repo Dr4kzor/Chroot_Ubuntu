@@ -78,7 +78,7 @@ cat >> "$WORK/preferences.xml" <<SETTINGS
     <string name="userNamePref">$SERVER_USER</string>
     <string name="passwordPref">$PASSWORD_HASH</string>
     <boolean name="anonymousLoginPref" value="false" />
-    <boolean name="pubKeyAuthPref" value="false" />
+    <boolean name="pubKeyAuthPref" value="true" />
     <string name="whichServerToStartPref">2</string>
     <string name="securePortPref">$SERVER_PORT</string>
     <string name="bindIpPref">127.0.0.1</string>
