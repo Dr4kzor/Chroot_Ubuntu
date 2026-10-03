@@ -82,7 +82,7 @@
 
 	#Step 1 - Login as ROOT
 	#Step 2 - Login as User and start xfce
-	sudo chroot $ROOTFSPATH /bin/su - -c "export DISPLAY=:0
+	sudo -a -- "$PREFIX/bin/chroot" "$ROOTFSPATH" /bin/su - -c "export DISPLAY=:0
 	       #export XDG_RUNTIME_DIR=/tmp
 		## Set pulseaudio socket = native
 		export PULSE_SERVER=unix:/tmp/pulse/native

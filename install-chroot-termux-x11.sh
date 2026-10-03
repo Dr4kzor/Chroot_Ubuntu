@@ -7,7 +7,7 @@ read -r -p 'Install/reinstall Termux-X11 Ubuntu? Existing X11 Ubuntu data will b
 [[ $ANSWER == [yY] || $ANSWER == [yY][eE][sS] ]] || exit 0
 apt update
 apt install -y sudo x11-repo curl tar gzip mount-utils procps coreutils
-apt install -y termux-x11-nightly pulseaudio
+apt install -y pulseaudio
 termux-setup-storage
 WORK=$(mktemp -d "$PREFIX/tmp/chroot-termux-x11-install.XXXXXX")
 trap 'rm -rf "$WORK"' EXIT
@@ -19,6 +19,7 @@ if [[ -z $BACKUP ]]; then
 fi
 # Validate before closing the existing desktop or changing its files.
 bash "$SCRIPT_DIR/restore-chroot-termux-x11.sh" --check "$BACKUP"
+# The updater installs the latest APT companion package and Android nightly APK.
 bash "$SCRIPT_DIR/update-chroot-termux-x11.sh" --confirmed
 bash "$SCRIPT_DIR/restore-chroot-termux-x11.sh" --confirmed "$BACKUP"
 echo 'Installation complete. Open the menu with: chroot_manager'

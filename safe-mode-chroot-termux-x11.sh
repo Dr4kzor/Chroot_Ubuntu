@@ -16,7 +16,7 @@ unset LD_PRELOAD
 	#sudo mount --bind $PREFIX/tmp/.X11-unix $ROOTFSPATH/tmp/.X11-unix
 	echo "Starting Chroot Ubuntu SAFE MODE!"
         echo ""
-	sudo chroot $ROOTFSPATH /bin/su -
+	sudo -a -- "$PREFIX/bin/chroot" "$ROOTFSPATH" /bin/su -
 	#sudo umount $ROOTFSPATH/proc
 	#sudo umount $ROOTFSPATH/sys
 	#sudo umount $ROOTFSPATH/dev/pts
