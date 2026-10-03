@@ -18,8 +18,12 @@ unset LD_PRELOAD LD_LIBRARY_PATH
 MODE=${1:-stop}
 
 # Get the chroot's processes without selecting Android processes by shared UID.
-PIDS=$(stat -c '%N' /proc/[0-9]*/root 2>/dev/null |
- awk -F "'" -v root="$ROOT" '$4==root {split($2,p,"/"); print p[3]}')
+chroot_pids() {
+ stat -c '%N' /proc/[0-9]*/root 2>/dev/null |
+  grep -F " -> '$ROOT'" |
+  cut -d / -f 3
+}
+PIDS=$(chroot_pids)
 # Include only the display/audio services using AnLand's private runtime.
 for PID in $(pgrep -f "^($PREFIX/bin/)?(anland|anland-compatible|pulseaudio)( |$)"); do
  if tr '\000' '\n' < "/proc/$PID/environ" 2>/dev/null | grep -Fx "TMPDIR=$BASE/runtime" >/dev/null; then
@@ -32,7 +36,12 @@ if [ "$MODE" = request ]; then
  for PID in $PIDS; do
   [ "$(cat "/proc/$PID/comm" 2>/dev/null)" = kwin_wayland ] || continue
   UID_NUMBER=$(cat "$ROOT/etc/anland-user.uid") || exit 1
-  USER_NAME=$(awk -F: -v uid="$UID_NUMBER" '$3==uid {print $1; exit}' "$ROOT/etc/passwd")
+  USER_NAME=
+  while IFS=: read -r LOGIN PASSWORD USER_UID REST; do
+   [ "$USER_UID" = "$UID_NUMBER" ] || continue
+   USER_NAME=$LOGIN
+   break
+  done < "$ROOT/etc/passwd"
   [ -n "$USER_NAME" ] || exit 1
   nsenter -t "$PID" -m chroot "$ROOT" /usr/bin/env -i HOME=/root PATH=/usr/bin:/bin /bin/su - "$USER_NAME" -c '
    export XDG_RUNTIME_DIR=/run/anland/$(id -u)
@@ -59,8 +68,7 @@ if [ "$MODE" != status ]; then
 fi
 
 # Do not delete a rootfs still used by a process or another mount namespace.
-LEFT=$(stat -c '%N' /proc/[0-9]*/root 2>/dev/null |
- awk -F "'" -v root="$ROOT" '$4==root {split($2,p,"/"); print p[3]}')
+LEFT=$(chroot_pids)
 for PID in $(pgrep -f "^($PREFIX/bin/)?(anland|anland-compatible|pulseaudio)( |$)"); do
  if tr '\000' '\n' < "/proc/$PID/environ" 2>/dev/null | grep -Fx "TMPDIR=$BASE/runtime" >/dev/null; then
   LEFT="$LEFT $PID"
@@ -89,7 +97,7 @@ case ${1:-} in
   echo 'Running AnLand programs will be closed. Backups and Termux-X11 are kept.'
   read -r -p 'Uninstall AnLand? [y/N] ' ANSWER
   [[ $ANSWER == [yY] || $ANSWER == [yY][eE][sS] ]] || exit 0 ;;
- *) echo 'Usage: bash uninstall-anland.sh [--stop-only]'; exit 1 ;;
+ *) echo 'Usage: bash uninstall-chroot-anland.sh [--stop-only]'; exit 1 ;;
 esac
 [[ ! -L $BASE && ! -L $ROOT ]] || { echo 'Unexpected AnLand directory symlink; nothing removed.'; exit 1; }
 

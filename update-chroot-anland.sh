@@ -24,16 +24,20 @@ curl -fL --retry 3 "$API" -o "$DOWNLOADS/release.json"
 
 # GitHub lists each asset's name, digest and download URL in that order.
 # Select only the Compatible APK and ARM64 daemon. Stop if the format changes.
-awk -F '"' '
- /"name":/ {name=$4}
- /"digest":/ {digest=$4}
- /"browser_download_url":/ {
-  file=""
-  if (name ~ /^AnlandTermux-.*-compatible\.apk$/) file="anland.apk"
-  if (name ~ /^anland_.*_aarch64\.deb$/) file="anland.deb"
-  if (file != "") print file, $4, digest
- }
-' "$DOWNLOADS/release.json" > "$DOWNLOADS/assets.txt"
+NAME=
+DIGEST=
+while IFS= read -r LINE; do
+ case "$LINE" in
+  *'"name":'*) NAME=$(printf '%s' "$LINE" | cut -d '"' -f 4); DIGEST= ;;
+  *'"digest":'*) DIGEST=$(printf '%s' "$LINE" | cut -d '"' -f 4) ;;
+  *'"browser_download_url":'*)
+   URL=$(printf '%s' "$LINE" | cut -d '"' -f 4)
+   case "$NAME" in
+    AnlandTermux-*-compatible.apk) echo "anland.apk $URL $DIGEST" ;;
+    anland_*_aarch64.deb) echo "anland.deb $URL $DIGEST" ;;
+   esac ;;
+ esac
+done < "$DOWNLOADS/release.json" > "$DOWNLOADS/assets.txt"
 [[ $(wc -l < "$DOWNLOADS/assets.txt") == 2 ]] || {
  echo "Cannot identify both release files. Check $REPO/releases"; exit 1;
 }

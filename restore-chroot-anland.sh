@@ -5,19 +5,26 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "$0")" && pwd)
 PREFIX=/data/data/com.termux/files/usr
 ROOT=/data/local/anland-ubuntu26
 BASE="$HOME/anland-termux"
-MANAGER="$HOME/.local/share/anland"
+MANAGER="$HOME/.local/share/chroot-manager/anland"
 MODE=${1:-}
 case "$MODE" in --check|--overwrite) shift ;; esac
 BACKUP=${1:-$HOME/ubuntu-anland-backup.tar.gz}
 BACKUP=$(realpath "$BACKUP")
 [[ -f $BACKUP ]] || { echo "Snapshot not found: $BACKUP"; exit 1; }
-[[ -f $SCRIPT_DIR/uninstall-anland.sh ]] || { echo 'Place uninstall-anland.sh beside this loader.'; exit 1; }
+[[ -f $SCRIPT_DIR/uninstall-chroot-anland.sh ]] || { echo 'Place uninstall-chroot-anland.sh beside this loader.'; exit 1; }
 
 # Wrong or damaged archives must not replace an existing system.
-tar -tzf "$BACKUP" | awk '
- {sub(/^\.\//, "")}
- $0 !~ /^data\/local\/anland-ubuntu26(\/|$)/ || $0 ~ /(^|\/)\.\.(\/|$)/ {bad=1}
- END {exit bad || NR == 0}' || { echo 'Not a valid Ubuntu-AnLand snapshot.'; exit 1; }
+tar -tzf "$BACKUP" | (
+ VALID=yes
+ COUNT=0
+ while IFS= read -r ENTRY; do
+  ENTRY=${ENTRY#./}
+  COUNT=$((COUNT + 1))
+  case "$ENTRY" in data/local/anland-ubuntu26|data/local/anland-ubuntu26/*) ;; *) VALID=no ;; esac
+  case "/$ENTRY/" in */../*) VALID=no ;; esac
+ done
+ [[ $VALID == yes && $COUNT -gt 0 ]]
+) || { echo 'Not a valid Ubuntu-AnLand snapshot.'; exit 1; }
 [[ $MODE != --check ]] || { echo 'Snapshot check passed.'; exit 0; }
 [[ $(id -u) != 0 && $HOME == /data/data/com.termux/files/home ]] || { echo 'Run as the normal Termux user.'; exit 1; }
 
@@ -27,7 +34,7 @@ if [[ $MODE != --overwrite ]] && { [[ -e $BASE || -e $HOME/anland ]] || sudo tes
  [[ $ANSWER == [yY] || $ANSWER == [yY][eE][sS] ]] || { echo 'Cancelled.'; exit 0; }
 fi
 # The self-contained uninstaller also provides verified stop-only cleanup.
-bash "$SCRIPT_DIR/uninstall-anland.sh" --stop-only
+bash "$SCRIPT_DIR/uninstall-chroot-anland.sh" --stop-only
 mkdir "$BASE/.uninstalling"
 trap 'rmdir "$BASE/.uninstalling" 2>/dev/null || true' EXIT
 
@@ -210,7 +217,15 @@ PREFIX=/data/data/com.termux/files/usr
 MODE=${1:-desktop}
 # The desktop account keeps its UID when renamed. Resolve its current name.
 DESKTOP_UID=$(cat "$ROOT/etc/anland-user.uid" 2>/dev/null || echo 1001)
-CHROOT_USER=$(awk -F: -v uid="$DESKTOP_UID" '$3 == uid && $3 >= 1000 {print $1; exit}' "$ROOT/etc/passwd")
+CHROOT_USER=
+DESKTOP_GID=
+while IFS=: read -r LOGIN PASSWORD USER_UID USER_GID DESCRIPTION USER_HOME USER_SHELL; do
+ if [ "$USER_UID" = "$DESKTOP_UID" ] && [ "$USER_UID" -ge 1000 ]; then
+  CHROOT_USER=$LOGIN
+  DESKTOP_GID=$USER_GID
+  break
+ fi
+done < "$ROOT/etc/passwd"
 case "$MODE" in
  safe-mode|rename-user|maintenance|build-backend) ;;
  *) [ -n "$CHROOT_USER" ] || { echo 'Anland desktop account not found.' >&2; exit 1; } ;;
@@ -258,7 +273,6 @@ mkdir -p "$ROOT/tmp/.ICE-unix"
 chown 0:0 "$ROOT/tmp/.ICE-unix"
 chmod 1777 "$ROOT/tmp/.ICE-unix"
 if [ -n "$CHROOT_USER" ]; then
- DESKTOP_GID=$(awk -F: -v uid="$DESKTOP_UID" '$3 == uid {print $4; exit}' "$ROOT/etc/passwd")
  for runtime in "$ROOT/run/anland/$DESKTOP_UID" "$ROOT/run/user/$DESKTOP_UID"; do
   mkdir -p "$runtime"
   chown "$DESKTOP_UID:$DESKTOP_GID" "$runtime"
@@ -399,14 +413,14 @@ END_BENCHMARK_SESSION_SH
 chmod 700 "$BASE/benchmark-session.sh.new"
 mv -f "$BASE/benchmark-session.sh.new" "$BASE/benchmark-session.sh"
 # Install the shared shell cleanup helper.
-bash "$SCRIPT_DIR/uninstall-anland.sh" --print-stop-script > "$BASE/stop-chroot.sh.new"
+bash "$SCRIPT_DIR/uninstall-chroot-anland.sh" --print-stop-script > "$BASE/stop-chroot.sh.new"
 chmod 700 "$BASE/stop-chroot.sh.new"
 mv -f "$BASE/stop-chroot.sh.new" "$BASE/stop-chroot.sh"
 rm -f "$HOME/anland" "$HOME/anland.sh"
 # Remove the obsolete helper from installations created with the earlier installer.
 rm -f "$BASE/stop-chroot.cjs"
 mkdir -p "$MANAGER"
-for FILE in uninstall-anland.sh load-anland-snapshot.sh; do
+for FILE in uninstall-chroot-anland.sh restore-chroot-anland.sh; do
  if [[ $(realpath "$SCRIPT_DIR/$FILE") != "$MANAGER/$FILE" ]]; then
   install -m 700 "$SCRIPT_DIR/$FILE" "$MANAGER/$FILE"
  fi
@@ -427,7 +441,7 @@ cat > "$HOME/.shortcuts/anland-restore-backup.sh" <<'RESTORE_SHORTCUT'
 #!/data/data/com.termux/files/usr/bin/bash
 BACKUP="$HOME/ubuntu-anland-backup.tar.gz"
 [[ -f $BACKUP ]] || read -r -p 'Snapshot path: ' BACKUP
-exec bash "$HOME/.local/share/anland/load-anland-snapshot.sh" "$BACKUP"
+exec bash "$HOME/.local/share/chroot-manager/anland/restore-chroot-anland.sh" "$BACKUP"
 RESTORE_SHORTCUT
 chmod 755 "$HOME/.shortcuts/anland-restore-backup.sh"
 echo 'Ubuntu-AnLand restored. Use the Start shortcut.'

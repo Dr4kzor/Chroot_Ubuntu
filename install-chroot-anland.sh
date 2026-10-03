@@ -4,7 +4,7 @@ set -euo pipefail
 PREFIX=/data/data/com.termux/files/usr
 SCRIPT=$(realpath "$0")
 SCRIPT_DIR=$(dirname "$SCRIPT")
-MANAGER="$HOME/.local/share/anland"
+MANAGER="$HOME/.local/share/chroot-manager/anland"
 ROOT=/data/local/anland-ubuntu26
 SCRIPTS_URL=https://raw.githubusercontent.com/Dr4kzor/Chroot_Ubuntu/main
 SNAPSHOT_URL=https://github.com/Dr4kzor/Chroot_Ubuntu/releases/latest/download/ubuntu-anland-backup.tar.gz
@@ -51,7 +51,7 @@ fi
 WORK=$(mktemp -d "$PREFIX/tmp/anland-install.XXXXXX")
 trap 'rm -rf "$WORK"' EXIT
 mkdir -p "$MANAGER"
-for FILE in preinstall-anland.sh install-latest-anland.sh uninstall-anland.sh load-anland-snapshot.sh; do
+for FILE in preinstall-chroot-anland.sh update-chroot-anland.sh uninstall-chroot-anland.sh restore-chroot-anland.sh; do
  if [[ -f $SCRIPT_DIR/$FILE ]]; then
   cp "$SCRIPT_DIR/$FILE" "$WORK/$FILE"
  elif [[ -f $MANAGER/$FILE ]]; then
@@ -75,11 +75,11 @@ if [[ -f $HOME/.shortcuts/anland-restore-backup.sh ]]; then
 #!/data/data/com.termux/files/usr/bin/bash
 BACKUP="$HOME/ubuntu-anland-backup.tar.gz"
 [[ -f $BACKUP ]] || read -r -p 'Snapshot path: ' BACKUP
-exec bash "$HOME/.local/share/anland/load-anland-snapshot.sh" "$BACKUP"
+exec bash "$HOME/.local/share/chroot-manager/anland/restore-chroot-anland.sh" "$BACKUP"
 RESTORE
  chmod 755 "$HOME/.shortcuts/anland-restore-backup.sh"
 fi
-rm -f "$HOME/load-anland-snapshot.sh" "$HOME/uninstall-anland.sh"
+rm -f "$HOME/restore-chroot-anland.sh" "$HOME/uninstall-chroot-anland.sh"
 # Shortcuts call the installed launcher directly.
 for SHORTCUT in "$HOME"/.shortcuts/anland-*.sh; do
  [[ -f $SHORTCUT ]] || continue
@@ -95,15 +95,15 @@ done
 
 case $ACTION in
  uninstall)
-  bash "$MANAGER/uninstall-anland.sh"
+  bash "$MANAGER/uninstall-chroot-anland.sh"
   exit ;;
  update)
-  bash "$MANAGER/uninstall-anland.sh" --stop-only
-  bash "$MANAGER/install-latest-anland.sh"
+  bash "$MANAGER/uninstall-chroot-anland.sh" --stop-only
+  bash "$MANAGER/update-chroot-anland.sh"
   exit ;;
 esac
 apt update
-bash "$MANAGER/preinstall-anland.sh"
+bash "$MANAGER/preinstall-chroot-anland.sh"
 
 # Optional second argument: a local snapshot. Otherwise use the release snapshot.
 BACKUP=${2:-$SCRIPT_DIR/ubuntu-anland-backup.tar.gz}
@@ -114,8 +114,8 @@ if [[ ! -f $BACKUP ]]; then
  curl -fL --retry 3 "$SNAPSHOT_URL" -o "$BACKUP.part"
  mv "$BACKUP.part" "$BACKUP"
 fi
-bash "$MANAGER/load-anland-snapshot.sh" --check "$BACKUP"
-if ((${#OVERWRITE[@]})); then bash "$MANAGER/uninstall-anland.sh" --stop-only; fi
-bash "$MANAGER/install-latest-anland.sh"
-bash "$MANAGER/load-anland-snapshot.sh" "${OVERWRITE[@]}" "$BACKUP"
+bash "$MANAGER/restore-chroot-anland.sh" --check "$BACKUP"
+if ((${#OVERWRITE[@]})); then bash "$MANAGER/uninstall-chroot-anland.sh" --stop-only; fi
+bash "$MANAGER/update-chroot-anland.sh"
+bash "$MANAGER/restore-chroot-anland.sh" "${OVERWRITE[@]}" "$BACKUP"
 printf '\nInstallation complete.\nOpen the Run / Reinstall / Update / Uninstall menu with:\n\n  anland_chroot\n\n'
