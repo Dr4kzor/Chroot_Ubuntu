@@ -1,0 +1,173 @@
+) Install and configure FTP (SFTP)
+0) Exit
+Choose action: 9
+
+1) Android + anland
+2) Android + both chroots
+0) Cancel
+Configure: 2
+Downloading https://raw.githubusercontent.com/Dr4kzor/Chroot_Ubuntu/main/setup-prim-ftpd-all-chroots.sh
+  % Total    % Received % Xferd  Average Speed  Time    Time    Time   Current
+                                 Dload  Upload  Total   Spent   Left   Speed
+100   2386 100   2386   0      0  18616      0                              0
+Downloading https://raw.githubusercontent.com/Dr4kzor/Chroot_Ubuntu/main/install-prim-ftpd-android.sh
+  % Total    % Received % Xferd  Average Speed  Time    Time    Time   Current
+                                 Dload  Upload  Total   Spent   Left   Speed
+100   6790 100   6790   0      0  66199      0                              0
+Downloading https://raw.githubusercontent.com/Dr4kzor/Chroot_Ubuntu/main/prim-ftpd-chroot-termux-x11.sh
+  % Total    % Received % Xferd  Average Speed  Time    Time    Time   Current
+                                 Dload  Upload  Total   Spent   Left   Speed
+100   8502 100   8502   0      0  84416      0                              0
+Downloading https://raw.githubusercontent.com/Dr4kzor/Chroot_Ubuntu/main/prim-ftpd-chroot-anland.sh
+  % Total    % Received % Xferd  Average Speed  Time    Time    Time   Current
+                                 Dload  Upload  Total   Spent   Left   Speed
+100   8532 100   8532   0      0  59216      0                              0
+Reading package lists... Done
+Building dependency tree... Done
+Reading state information... Done
+sudo is already the newest version (1.2.0).
+0 upgraded, 0 newly installed, 0 to remove and 0 not upgraded.
+Reading package lists... Done
+Building dependency tree... Done
+Reading state information... Done
+curl is already the newest version (8.22.0).
+openssl-tool is already the newest version (1:3.6.5).
+coreutils is already the newest version (9.11-1).
+sudo is already the newest version (1.2.0).
+0 upgraded, 0 newly installed, 0 to remove and 0 not upgraded.
+SFTP login: user, address: 127.0.0.1:1234
+Keeping the existing password.
+SELinux: Loaded file_contexts
+Starting: Intent { cmp=org.primftpd/.ui.MainTabsActivity }
+SFTP is listening on 127.0.0.1:1234. Existing authorized keys were kept.
+Hit:1 https://Pi-Apps-Coders.github.io/box64-debs/debian ./ InRelease
+Hit:2 https://ppa.launchpadcontent.net/mozillateam/ppa/ubuntu noble InRelease
+Hit:3 http://ports.ubuntu.com/ubuntu-ports noble InRelease
+Hit:4 http://ports.ubuntu.com/ubuntu-ports noble-updates InRelease
+Hit:5 http://ports.ubuntu.com/ubuntu-ports noble-backports InRelease
+Hit:6 http://ports.ubuntu.com/ubuntu-ports noble-security InRelease
+Reading package lists... Done
+Reading package lists... Done
+Building dependency tree... Done
+Reading state information... Done
+gvfs-backends is already the newest version (1.54.4-0ubuntu1~24.04.4).
+gvfs-fuse is already the newest version (1.54.4-0ubuntu1~24.04.4).
+openssh-client is already the newest version (1:9.6p1-3ubuntu13.19).
+0 upgraded, 0 newly installed, 0 to remove and 149 not upgraded.
+socket: Operation not permitted
+ssh: connect to host 127.0.0.1 port 1234: failure
+Connection closed
+~ $ rm install.sh
+~ $ nano install.sh
+~ $ chmod +x install.sh
+~ $ ./install.sh
+
+Ubuntu Chroot
+1) Termux-X11 / XFCE
+2) AnLand / KDE
+0) Exit
+Choose version: 2
+
+anland
+1) Run
+2) Install / Reinstall
+3) Update app and Termux package
+4) Uninstall
+5) Safe mode
+6) Save backup
+7) Restore backup
+8) Stop
+9) Install and configure FTP (SFTP)
+0) Exit
+Choose action: 9
+
+1) Android + anland
+2) Android + both chroots
+0) Cancel
+Configure: 2
+Downloading https://raw.githubusercontent.com/Dr4kzor/Chroot_Ubuntu/main/setup-prim-ftpd-all-chroots.sh
+  % Total    % Received % Xferd  Average Speed  Time    Time    Time   Current
+                                 Dload  Upload  Total   Spent   Left   Speed
+100   2386 100   2386   0      0  15763      0                              0
+Downloading https://raw.githubusercontent.com/Dr4kzor/Chroot_Ubuntu/main/install-prim-ftpd-android.sh
+  % Total    % Received % Xferd  Average Speed  Time    Time    Time   Current
+                                 Dload  Upload  Total   Spent   Left   Speed
+100   6790 100   6790   0      0  69528      0                              0
+Downloading https://raw.githubusercontent.com/Dr4kzor/Chroot_Ubuntu/main/prim-ftpd-chroot-termux-x11.sh
+  % Total    % Received % Xferd  Average Speed  Time    Time    Time   Current
+                                 Dload  Upload  Total   Spent   Left   Speed
+100   8502 100   8502   0      0  80554      0                              0
+Downloading https://raw.githubusercontent.com/Dr4kzor/Chroot_Ubuntu/main/prim-ftpd-chroot-anland.sh
+  % Total    % Received % Xferd  Average Speed  Time    Time    Time   Current
+                                 Dload  Upload  Total   Spent   Left   Speed
+100   8532 100   8532   0      0  86760      0                              0
+Reading package lists... Done
+Building dependency tree... Done
+Reading state information... Done
+sudo is already the newest version (1.2.0).
+0 upgraded, 0 newly installed, 0 to remove and 0 not upgraded.
+Reading package lists... Done
+Building dependency tree... Done
+Reading state information... Done
+curl is already the newest version (8.22.0).
+openssl-tool is already the newest version (1:3.6.5).
+coreutils is already the newest version (9.11-1).
+sudo is already the newest version (1.2.0).
+0 upgraded, 0 newly installed, 0 to remove and 0 not upgraded.
+SFTP login: user, address: 127.0.0.1:1234
+Keeping the existing password.
+SELinux: Loaded file_contexts
+Starting: Intent { cmp=org.primftpd/.ui.MainTabsActivity }
+SFTP is listening on 127.0.0.1:1234. Existing authorized keys were kept.
+Hit:1 https://Pi-Apps-Coders.github.io/box64-debs/debian ./ InRelease
+Hit:2 http://ports.ubuntu.com/ubuntu-ports noble InRelease
+Hit:3 http://ports.ubuntu.com/ubuntu-ports noble-updates InRelease
+Hit:4 https://ppa.launchpadcontent.net/mozillateam/ppa/ubuntu noble InRelease
+Hit:5 http://ports.ubuntu.com/ubuntu-ports noble-backports InRelease
+Hit:6 http://ports.ubuntu.com/ubuntu-ports noble-security InRelease
+Reading package lists... Done
+Reading package lists... Done
+Building dependency tree... Done
+Reading state information... Done
+gvfs-backends is already the newest version (1.54.4-0ubuntu1~24.04.4).
+gvfs-fuse is already the newest version (1.54.4-0ubuntu1~24.04.4).
+openssh-client is already the newest version (1:9.6p1-3ubuntu13.19).
+0 upgraded, 0 newly installed, 0 to remove and 149 not upgraded.
+socket: Operation not permitted
+ssh: connect to host 127.0.0.1 port 1234: failure
+Connection closed
+~ $ id
+uid=10190(u0_a190) gid=10190(u0_a190) groups=10190(u0_a190),3003(inet),9997(everybody),20190(u0_a190_cache),50190(all_a190) context=u:r:untrusted_app_27:s0:c190,c256,c512,c768
+~ $ sftp -vvv -oBatchMode=yes android-storage-prim-ftpd
+debug1: OpenSSH_10.5p1, OpenSSL 3.6.5 29 Sep 2026
+debug3: Running on Linux 4.19.157-perf-gbfafbd1901db #1 SMP PREEMPT Fri Mar 10 10:12:41 UTC 2023 aarch64
+debug3: Started with: /data/data/com.termux/files/usr/bin/ssh "-oForwardX11 no" "-oPermitLocalCommand no" "-oClearAllForwardings yes" "-oControlMaster no" -v -v -v -o BatchMode=yes "-oForwardAgent no" -s -- android-storage-prim-ftpd sftp
+debug1: Reading configuration data /data/data/com.termux/files/usr/etc/ssh/ssh_config
+debug1: /data/data/com.termux/files/usr/etc/ssh/ssh_config line 20: include /data/data/com.termux/files/usr/etc/ssh/ssh_config.d/*.conf matched no files
+debug3: expanded UserKnownHostsFile '~/.ssh/known_hosts' -> '/data/data/com.termux/files/home/.ssh/known_hosts'
+debug3: expanded UserKnownHostsFile '~/.ssh/known_hosts2' -> '/data/data/com.termux/files/home/.ssh/known_hosts2'
+debug1: Authenticator provider $SSH_SK_PROVIDER did not resolve; disabling
+debug1: no pubkey loaded from /data/data/com.termux/files/home/.ssh/id_rsa
+debug1: identity file /data/data/com.termux/files/home/.ssh/id_rsa type -1
+debug1: no identity pubkey loaded from /data/data/com.termux/files/home/.ssh/id_rsa
+debug1: no pubkey loaded from /data/data/com.termux/files/home/.ssh/id_ecdsa
+debug1: identity file /data/data/com.termux/files/home/.ssh/id_ecdsa type -1
+debug1: no identity pubkey loaded from /data/data/com.termux/files/home/.ssh/id_ecdsa
+debug1: no pubkey loaded from /data/data/com.termux/files/home/.ssh/id_ecdsa_sk
+debug1: identity file /data/data/com.termux/files/home/.ssh/id_ecdsa_sk type -1
+debug1: no identity pubkey loaded from /data/data/com.termux/files/home/.ssh/id_ecdsa_sk
+debug1: no pubkey loaded from /data/data/com.termux/files/home/.ssh/id_ed25519
+debug1: identity file /data/data/com.termux/files/home/.ssh/id_ed25519 type -1
+debug1: no identity pubkey loaded from /data/data/com.termux/files/home/.ssh/id_ed25519
+debug1: no pubkey loaded from /data/data/com.termux/files/home/.ssh/id_ed25519_sk
+debug1: identity file /data/data/com.termux/files/home/.ssh/id_ed25519_sk type -1
+debug1: no identity pubkey loaded from /data/data/com.termux/files/home/.ssh/id_ed25519_sk
+debug1: no pubkey loaded from /data/data/com.termux/files/home/.ssh/id_mldsa44_ed25519
+debug1: identity file /data/data/com.termux/files/home/.ssh/id_mldsa44_ed25519 type -1
+debug1: no identity pubkey loaded from /data/data/com.termux/files/home/.ssh/id_mldsa44_ed25519
+debug2: resolving "android-storage-prim-ftpd" port 22
+debug3: resolve_host: lookup android-storage-prim-ftpd:22
+ssh: Could not resolve hostname android-storage-prim-ftpd: No address associated with hostname
+Connection closed.
+Connection closed
+~ $
