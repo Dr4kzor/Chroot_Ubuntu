@@ -35,22 +35,12 @@ sudo chmod 1777 "$ROOT/tmp"
 mkdir -p "$HOME/.shortcuts"
 sudo tar -C "$ROOT/opt/.shortcuts" --exclude='./anland-*' --exclude='./icons/anland-*' --exclude='./*chroot-anland*' --exclude='./icons/*chroot-anland*' -cf - . |
  tar -C "$HOME/.shortcuts" --no-same-owner -xf -
-# Keep the maintained launcher; old snapshots may contain an unsafe kill command
-# or a username from the machine on which the snapshot was created.
+# Keep the original shortcut names and icons. Install the real launch scripts,
+# with the sudo fix and default user, rather than creating menu wrappers.
+install -m 755 "$SCRIPT_DIR/run-chroot-termux-x11.sh" "$HOME/.shortcuts/1-ubuntu.sh"
+install -m 755 "$SCRIPT_DIR/safe-mode-chroot-termux-x11.sh" "$HOME/.shortcuts/2-safe_mode.sh"
 for ACTION in run safe-mode backup restore; do
- printf '#!/data/data/com.termux/files/usr/bin/bash\nexec bash "%s/%s-chroot-termux-x11.sh"\n' "$SCRIPT_DIR" "$ACTION" > "$HOME/.shortcuts/$ACTION-chroot-termux-x11.sh"
- chmod 755 "$HOME/.shortcuts/$ACTION-chroot-termux-x11.sh"
+ rm -f "$HOME/.shortcuts/$ACTION-chroot-termux-x11.sh" "$HOME/.shortcuts/icons/$ACTION-chroot-termux-x11.sh.png"
 done
-# Rename matching icons and remove the four obsolete shortcut names.
-while read -r OLD NEW; do
- if [[ -f $HOME/.shortcuts/icons/$OLD.sh.png ]]; then
-  mv -f "$HOME/.shortcuts/icons/$OLD.sh.png" "$HOME/.shortcuts/icons/$NEW-chroot-termux-x11.sh.png"
- fi
- rm -f "$HOME/.shortcuts/$OLD.sh"
-done <<'NAMES'
-1-ubuntu run
-2-safe_mode safe-mode
-3-save_ubuntu_snapshot backup
-4-load_ubuntu_snapshot restore
-NAMES
+rm -f "$HOME/.shortcuts/0-Ubuntu.sh" "$HOME/.shortcuts/icons/0-Ubuntu.sh.png"
 echo 'Termux-X11 Ubuntu restored. Open the menu with: chroot_manager'

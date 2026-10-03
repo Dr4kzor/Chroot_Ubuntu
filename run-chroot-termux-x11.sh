@@ -1,11 +1,10 @@
 #!/system/bin/sh
 	pkill -x termux-x11
-	PULSE_RUNTIME_PATH="$PREFIX/var/run/pulse" pulseaudio --kill 2>/dev/null
+	pkill -f pulseaudio
 	unset LD_PRELOAD
 
 
-        # The published Ubuntu snapshot uses user. Override only after renaming it.
-        export DEFINED_USERNAME=${CHROOT_USERNAME:-user}
+	export DEFINED_USERNAME=${CHROOT_USERNAME:-user}
 
 	## Only if needed
 	#su -c "settings put global settings_enable_monitor_phantom_procs false"
@@ -22,12 +21,11 @@
 	sudo mount --bind /dev/pts $ROOTFSPATH/dev/pts
 	sudo mount --bind /sdcard $ROOTFSPATH/sdcard
 
-
 	## Create and prepare tmp dir
 	export DISPLAY=:0
 	sudo mkdir -p $ROOTFSPATH/tmp
 	sudo mkdir -p $ROOTFSPATH/tmp/pulse
-        sudo chmod -R 1777 $ROOTFSPATH/tmp
+        sudo chmod 1777 $ROOTFSPATH/tmp
 	export PULSE_RUNTIME_PATH=$PREFIX/var/run/pulse
 
 
@@ -82,8 +80,10 @@
 
 	#Step 1 - Login as ROOT
 	#Step 2 - Login as User and start xfce
+	##The line below is the legacy path using TSU
+	##sudo chroot $ROOTFSPATH /bin/su - -c "export DISPLAY=:0
 	sudo -a -- "$PREFIX/bin/chroot" "$ROOTFSPATH" /bin/su - -c "export DISPLAY=:0
-	       #export XDG_RUNTIME_DIR=/tmp
+	       	##export XDG_RUNTIME_DIR=/tmp
 		## Set pulseaudio socket = native
 		export PULSE_SERVER=unix:/tmp/pulse/native
                 ## Type of Vsync

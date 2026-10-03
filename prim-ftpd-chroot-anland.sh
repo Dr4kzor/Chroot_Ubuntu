@@ -111,6 +111,9 @@ set -e
 export PATH=$PREFIX/bin:/system/bin
 mount --bind /dev '$ROOT/dev'
 mount -t proc proc '$ROOT/proc'
+# Older Android kernels require the inet group (GID 3003) to open sockets.
+# Reuse its existing name, and preserve the user's other group memberships.
+chroot '$ROOT' /usr/bin/env -i PATH=/usr/sbin:/usr/bin:/sbin:/bin /bin/sh -ec 'getent group 3003 >/dev/null || groupadd -g 3003 android_inet; NETWORK_GROUP=\$(getent group 3003 | cut -d: -f1); test -n "\$NETWORK_GROUP" && usermod -aG "\$NETWORK_GROUP" "$LOGIN"'
 chroot '$ROOT' /usr/bin/env -i PATH=/usr/sbin:/usr/bin:/sbin:/bin HOME=/root DEBIAN_FRONTEND=noninteractive /usr/bin/apt-get -o APT::Sandbox::User=root update
 chroot '$ROOT' /usr/bin/env -i PATH=/usr/sbin:/usr/bin:/sbin:/bin HOME=/root DEBIAN_FRONTEND=noninteractive /usr/bin/apt-get -o APT::Sandbox::User=root install -y $PACKAGES
 SYSTEM
@@ -162,3 +165,4 @@ sudo cp "$WORK/remote.desktop" "$REMOTE"
 sudo chown "$USER_UID:$USER_GID" "$REMOTE"
 sudo chmod 644 "$REMOTE"
 echo 'Dolphin is configured to connect with its SSH key, without password prompts.'
+echo 'Log out and reopen the desktop so existing apps receive the network group.'

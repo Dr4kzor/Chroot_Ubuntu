@@ -12,6 +12,7 @@ sudo /system/bin/sh -c '
 '
 pkill -x termux-x11 2>/dev/null || true
 pkill -f 'app_process / com.termux.x11' 2>/dev/null || true
+sudo -a -- /system/bin/am force-stop com.termux.x11
 PULSE_RUNTIME_PATH="$PREFIX/var/run/pulse" pulseaudio --kill 2>/dev/null || true
 # Do not lazily detach busy mounts before removing or archiving their directories.
 for DIR in proc sys dev/pts dev sdcard tmp/.X11-unix tmp/pulse; do
