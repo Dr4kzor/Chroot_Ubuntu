@@ -35,11 +35,8 @@ sudo chmod 1777 "$ROOT/tmp"
 mkdir -p "$HOME/.shortcuts"
 sudo tar -C "$ROOT/opt/.shortcuts" --exclude='./anland-*' --exclude='./icons/anland-*' --exclude='./*chroot-anland*' --exclude='./icons/*chroot-anland*' -cf - . |
  tar -C "$HOME/.shortcuts" --no-same-owner -xf -
-# Keep any username/custom settings in the snapshot's startup shortcut.
-if [[ -f $HOME/.shortcuts/1-ubuntu.sh ]]; then
- cp "$HOME/.shortcuts/1-ubuntu.sh" "$SCRIPT_DIR/run-chroot-termux-x11.sh"
- sed -i 's|pkill -f pulseaudio|PULSE_RUNTIME_PATH="$PREFIX/var/run/pulse" pulseaudio --kill 2>/dev/null|g' "$SCRIPT_DIR/run-chroot-termux-x11.sh"
-fi
+# Keep the maintained launcher; old snapshots may contain an unsafe kill command
+# or a username from the machine on which the snapshot was created.
 for ACTION in run safe-mode backup restore; do
  printf '#!/data/data/com.termux/files/usr/bin/bash\nexec bash "%s/%s-chroot-termux-x11.sh"\n' "$SCRIPT_DIR" "$ACTION" > "$HOME/.shortcuts/$ACTION-chroot-termux-x11.sh"
  chmod 755 "$HOME/.shortcuts/$ACTION-chroot-termux-x11.sh"

@@ -1,23 +1,11 @@
 #!/system/bin/sh
-	pkill -f termux-x11
+	pkill -x termux-x11
 	PULSE_RUNTIME_PATH="$PREFIX/var/run/pulse" pulseaudio --kill 2>/dev/null
 	unset LD_PRELOAD
 
 
-        # Read the existing desktop account so updates preserve user renames.
-        DEFINED_USERNAME=${CHROOT_USERNAME:-}
-        if [ -z "$DEFINED_USERNAME" ]; then
-         DEFINED_USERNAME=$(sudo cat /data/local/ubuntu/etc/passwd |
-          while IFS=: read -r LOGIN PASSWORD USER_UID USER_GID DESCRIPTION USER_HOME USER_SHELL; do
-           [ "$USER_UID" -ge 1000 ] && [ "$USER_UID" -lt 60000 ] || continue
-           case "$USER_HOME" in /home/*) ;; *) continue ;; esac
-           case "$USER_SHELL" in */false|*/nologin) continue ;; esac
-           echo "$LOGIN"
-           break
-          done)
-        fi
-        export DEFINED_USERNAME
-        [ -n "$DEFINED_USERNAME" ] || { echo 'No Ubuntu desktop user found.'; exit 1; }
+        # The published Ubuntu snapshot uses user. Override only after renaming it.
+        export DEFINED_USERNAME=${CHROOT_USERNAME:-user}
 
 	## Only if needed
 	#su -c "settings put global settings_enable_monitor_phantom_procs false"
