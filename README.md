@@ -181,3 +181,17 @@ To download and install FEX please visite https://github.com/FEX-Emu/FEX/tree/ma
 ## To run SU command:
 If you want to use the cmd "su" you must run "sudo su" instead of just "su"
 
+
+## This is only possible thanks to other projects:
+Termux from: https://github.com/termux/termux-app
+
+ANland display from: https://github.com/lfdevs/anland-termux
+
+Termux-X11 display from: https://github.com/termux/termux-x11
+
+Mesa GPU drivers from: https://github.com/lfdevs/mesa-for-android-container
+
+Box64 from: https://github.com/ptitseb/box64
+
+Wine from: https://www.winehq.org
+
