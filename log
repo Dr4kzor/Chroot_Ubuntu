@@ -1,0 +1,24 @@
+ser@localhost:~$  id
+      cat /proc/self/attr/current
+      grep -E "Seccomp|NoNewPrivs" /proc/self/status
+      sftp -vvv -oBatchMode=yes android-storage-prim-ftpd
+uid=1001(user) gid=1001(user) groups=1001(user),27(sudo),3003(inet)
+u:r:magisk:s0NoNewPrivs:	0
+Seccomp:	0
+OpenSSH_9.6p1 Ubuntu-3ubuntu13.19, OpenSSL 3.0.13 30 Jan 2024
+debug1: Reading configuration data /home/user/.ssh/config
+debug1: /home/user/.ssh/config line 2: Applying options for android-storage-prim-ftpd
+debug1: Reading configuration data /etc/ssh/ssh_config
+debug1: /etc/ssh/ssh_config line 19: include /etc/ssh/ssh_config.d/*.conf matched no files
+debug1: /etc/ssh/ssh_config line 21: Applying options for *
+debug2: resolve_canonicalize: hostname 127.0.0.1 is address
+debug3: expanded UserKnownHostsFile '~/.ssh/known_hosts' -> '/home/user/.ssh/known_hosts'
+debug3: expanded UserKnownHostsFile '~/.ssh/known_hosts2' -> '/home/user/.ssh/known_hosts2'
+debug3: channel_clear_timeouts: clearing
+debug3: ssh_connect_direct: entering
+debug1: Connecting to 127.0.0.1 [127.0.0.1] port 1234.
+socket: Operation not permitted
+ssh: connect to host 127.0.0.1 port 1234: failure
+Connection closed.  
+Connection closed
+
