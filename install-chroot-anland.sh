@@ -104,6 +104,15 @@ case $ACTION in
 esac
 apt update
 bash "$MANAGER/preinstall-chroot-anland.sh"
+for FILE in fix-chroot-network-uid.sh; do
+ if [[ $SCRIPT_DIR != "$MANAGER" && -f $SCRIPT_DIR/$FILE ]]; then
+  install -m 700 "$SCRIPT_DIR/$FILE" "$MANAGER/$FILE"
+ elif [[ ! -f $MANAGER/$FILE ]]; then
+  curl -fL --retry 3 "$SCRIPTS_URL/$FILE" -o "$MANAGER/$FILE.part"
+  mv "$MANAGER/$FILE.part" "$MANAGER/$FILE"
+ fi
+done
+bash -n "$MANAGER/fix-chroot-network-uid.sh"
 
 # Optional second argument: a local snapshot. Otherwise use the release snapshot.
 BACKUP=${2:-$SCRIPT_DIR/ubuntu-anland-backup.tar.gz}
@@ -118,4 +127,5 @@ bash "$MANAGER/restore-chroot-anland.sh" --check "$BACKUP"
 if ((${#OVERWRITE[@]})); then bash "$MANAGER/uninstall-chroot-anland.sh" --stop-only; fi
 bash "$MANAGER/update-chroot-anland.sh"
 bash "$MANAGER/restore-chroot-anland.sh" "${OVERWRITE[@]}" "$BACKUP"
+bash "$MANAGER/fix-chroot-network-uid.sh" anland --apply
 printf '\nInstallation complete.\nOpen the Run / Reinstall / Update / Uninstall menu with:\n\n  anland_chroot\n\n'

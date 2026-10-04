@@ -66,6 +66,7 @@ NAMES=(install update uninstall run safe-mode backup restore stop)
 [[ $VERSION != anland ]] || NAMES+=(preinstall)
 FILES=()
 for NAME in "${NAMES[@]}"; do FILES+=("$NAME-chroot-$VERSION.sh"); done
+if [[ $ACTION == install ]]; then FILES+=(fix-chroot-network-uid.sh); fi
 if [[ $ACTION == ftp ]]; then
  HELPERS="$STATE/ftp"
  FILES=(setup-prim-ftpd-all-chroots.sh install-prim-ftpd-android.sh prim-ftpd-chroot-termux-x11.sh prim-ftpd-chroot-anland.sh)
@@ -80,10 +81,10 @@ for FILE in "${FILES[@]}"; do
   echo "Downloading $SCRIPTS_URL/$FILE"
   curl -fL --retry 3 "$SCRIPTS_URL/$FILE" -o "$WORK/$FILE"
  fi
- bash -n "$WORK/$FILE"
+ [[ $FILE != *.sh ]] || bash -n "$WORK/$FILE"
 done
 mkdir -p "$HELPERS"
-for FILE in "$WORK"/*.sh; do install -m 700 "$FILE" "$HELPERS/${FILE##*/}"; done
+for FILE in "${FILES[@]}"; do install -m 700 "$WORK/$FILE" "$HELPERS/$FILE"; done
 if [[ $SELF != "$STATE/chroot-manager.sh" ]]; then
  install -m 700 "$SELF" "$STATE/chroot-manager.sh"
 fi

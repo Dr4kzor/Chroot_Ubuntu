@@ -24,7 +24,7 @@ if [[ $X11 == yes ]]; then
  X11_USER=${CHROOT_X11_USER:-user}
  if ! sudo grep -q "^$X11_USER:" /data/local/ubuntu/etc/passwd; then
   X11_USER=$(sudo cat /data/local/ubuntu/etc/passwd | while IFS=: read -r NAME PASSWORD ACCOUNT_UID ACCOUNT_GID DESCRIPTION ACCOUNT_HOME ACCOUNT_SHELL; do
-   [ "$ACCOUNT_UID" -ge 1000 ] && [ "$ACCOUNT_UID" -lt 60000 ] || continue
+   [ "$ACCOUNT_UID" -ge 1000 ] && [ "$ACCOUNT_UID" -lt 90000 ] || continue
    case "$ACCOUNT_HOME" in /home/*) ;; *) continue ;; esac
    case "$ACCOUNT_SHELL" in */false|*/nologin) continue ;; esac
    echo "$NAME"; break
