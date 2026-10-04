@@ -7,8 +7,24 @@ ROOT=/data/local/anland-ubuntu26
 BASE="$HOME/anland-termux"
 MANAGER="$HOME/.local/share/chroot-manager/anland"
 MODE=${1:-}
-case "$MODE" in --check|--overwrite|--shortcuts-only) shift ;; esac
+write_restore_shortcut() {
+ mkdir -p "$HOME/.shortcuts"
+ cat > "$HOME/.shortcuts/4-anland-load-snapshot.sh" <<'ANLAND_RESTORE_SHORTCUT'
+#!/data/data/com.termux/files/usr/bin/bash
+# Use the maintained loader so snapshot restores keep the current runtime fixes.
+set -euo pipefail
+if [[ $# == 0 ]]; then
+ BACKUP="$HOME/ubuntu-anland-backup.tar.gz"
+ [[ -f $BACKUP ]] || read -r -p 'Snapshot path: ' BACKUP
+ set -- "$BACKUP"
+fi
+exec bash "$HOME/.local/share/chroot-manager/anland/restore-chroot-anland.sh" "$@"
+ANLAND_RESTORE_SHORTCUT
+ chmod 755 "$HOME/.shortcuts/4-anland-load-snapshot.sh"
+}
+case "$MODE" in --check|--overwrite|--shortcuts-only|--runtime-only) shift ;; esac
 if [[ $MODE != --shortcuts-only ]]; then
+if [[ $MODE != --runtime-only ]]; then
 BACKUP=${1:-$HOME/ubuntu-anland-backup.tar.gz}
 BACKUP=$(realpath "$BACKUP")
 [[ -f $BACKUP ]] || { echo "Snapshot not found: $BACKUP"; exit 1; }
@@ -44,9 +60,59 @@ sudo rm -rf "$ROOT"
 sudo tar --numeric-owner --xattrs --xattrs-include='*' --acls -xpf "$BACKUP" -C /
 sudo mkdir -p "$ROOT"/{proc,sys,dev/pts,run,tmp,sdcard}
 sudo chmod 1777 "$ROOT/tmp"
+else
+ [[ $(id -u) != 0 && $HOME == /data/data/com.termux/files/home ]] || { echo 'Run as the normal Termux user.'; exit 1; }
+ sudo test -f "$ROOT/etc/passwd" || { echo 'Ubuntu-AnLand is not installed.'; exit 1; }
+ # Updating runtime scripts requires a stopped desktop, without replacing Ubuntu.
+ if ! su -c 'for p in /proc/[0-9]*/root; do
+  [ "$(readlink "$p" 2>/dev/null)" != /data/local/anland-ubuntu26 ] || exit 1
+ done'; then
+  echo 'Close AnLand before updating its runtime scripts.' >&2
+  exit 1
+ fi
+fi
 mkdir -p "$BASE/runtime/anland" "$BASE/logs" "$HOME/.shortcuts/icons"
 chmod 1777 "$BASE/runtime"
 chmod 711 "$BASE/runtime/anland"
+
+# Migrate older snapshots to the native compositor audio path.
+AUDIO_CONFIG=$(mktemp "$PREFIX/tmp/anland-audio-config.XXXXXX.sh")
+cat > "$AUDIO_CONFIG" <<'NATIVE_AUDIO_CONFIG'
+#!/system/bin/sh
+set -eu
+ROOT=/data/local/anland-ubuntu26
+CONF="$ROOT/etc/pipewire"
+if [ -f "$CONF/pipewire.conf.d/95-anland-aaudio.conf" ]; then
+ rm -f "$CONF/pipewire.conf.d/95-anland-aaudio.conf"
+fi
+rm -f "$CONF/pipewire.conf.d/95-anland-aaudio.conf.disabled" "$ROOT/usr/local/bin/anland-benchmark-session"
+mkdir -p "$CONF/pipewire-pulse.conf.d" "$CONF/pipewire.conf.d"
+if [ -f "$ROOT/usr/local/bin/startplasma-anland" ]; then
+ sed -i 's/# The Termux launcher supplies our independent Android AAudio server./# PipeWire Pulse clients use the compositor native audio bridge./' "$ROOT/usr/local/bin/startplasma-anland"
+fi
+cat > "$CONF/pipewire-pulse.conf.d/95-anland-native.conf" <<'PULSE_CONF'
+pulse.properties = {
+    server.address = [ "unix:/tmp/pulse/native" ]
+    pulse.min.req = 256/48000
+    pulse.default.req = 512/48000
+    pulse.default.tlength = 2048/48000
+    pulse.min.quantum = 256/48000
+}
+PULSE_CONF
+cat > "$CONF/pipewire.conf.d/96-anland-latency.conf" <<'PIPEWIRE_CONF'
+context.properties = {
+    default.clock.rate = 48000
+    default.clock.quantum = 512
+    default.clock.min-quantum = 256
+    default.clock.max-quantum = 2048
+}
+PIPEWIRE_CONF
+NATIVE_AUDIO_CONFIG
+if ! (unset LD_PRELOAD LD_LIBRARY_PATH; su -c "/system/bin/sh '$AUDIO_CONFIG'"); then
+ rm -f "$AUDIO_CONFIG"
+ exit 1
+fi
+rm -f "$AUDIO_CONFIG"
 
 # These plain shell sources run outside Ubuntu and are not in the old snapshot.
 
@@ -54,7 +120,7 @@ chmod 711 "$BASE/runtime/anland"
 cat > "$BASE/anland.sh.new" <<'END_ANLAND_SH'
 #!/data/data/com.termux/files/usr/bin/bash
 # Start the separate Ubuntu-Anland desktop. Default: KDE on XWayland :1.
-# Usage: ./anland [desktop|stop|status|safe-mode|rename-user|shell|weston|benchmark]
+# Usage: anland.sh [desktop|stop|status|safe-mode|rename-user|shell|weston]
 # Termux:X11 uses its own files and display; never stop it from this script.
 set -euo pipefail
 BASE=/data/data/com.termux/files/home/anland-termux
@@ -79,13 +145,12 @@ service_running() {
  return 1
 }
 stop_bridges() {
- for name in daemon bridge audio; do
+ for name in daemon bridge; do
   [[ -f "$LOGDIR/$name.pid" ]] || continue
   read -r pid < "$LOGDIR/$name.pid"
   [[ $pid =~ ^[0-9]+$ ]] || continue
   expected=anland
   [[ $name == bridge ]] && expected=anland-compatible
-  [[ $name == audio ]] && expected=pulseaudio
   if service_running "$LOGDIR/$name.pid" "$expected"; then
    kill -TERM "$pid" 2>/dev/null || true
   fi
@@ -112,8 +177,8 @@ mode=${1:-desktop}
  echo 'Anland uninstall is in progress. Finish it before starting another session.'; exit 1;
 }
 case $mode in
- safe-mode|rename-user|desktop|weston|shell|check|test|install-benchmark|benchmark|build-backend|install-godot|godot|maintenance|session-command) ;;
- *) echo 'Usage: ~/anland [desktop|weston|shell|check|benchmark|stop]'; exit 2 ;;
+ safe-mode|rename-user|desktop|weston|shell) ;;
+ *) echo 'Usage: anland.sh [desktop|weston|shell|stop|status|safe-mode|rename-user]'; exit 2 ;;
 esac
 # Maintenance console: finish logout, then hold the desktop lock until exit.
 if [[ $mode == safe-mode || $mode == rename-user ]]; then
@@ -133,14 +198,8 @@ if [[ $mode == safe-mode || $mode == rename-user ]]; then
  su -c "$PREFIX/bin/unshare --mount --propagation private /system/bin/sh $BASE/enter-chroot.sh $mode" 9>&-
  exit
 fi
-# Installer/maintenance commands need the chroot but not an Android display.
-case $mode in
- maintenance|session-command|build-backend|install-benchmark|install-godot)
- unset LD_PRELOAD LD_LIBRARY_PATH
- exec su -c "$PREFIX/bin/unshare --mount --propagation private /system/bin/sh $BASE/enter-chroot.sh $mode" ;;
-esac
 graphical=0
-case $mode in desktop|weston|benchmark|test|godot) graphical=1 ;; esac
+case $mode in desktop|weston) graphical=1 ;; esac
 if [[ $graphical == 1 ]]; then
  # Only one desktop owns this runtime directory at a time.
  exec 9>"$LOGDIR/session.lock"
@@ -156,15 +215,6 @@ if [[ $graphical == 1 ]]; then
  trap cleanup EXIT
  trap 'exit 130' INT
  trap 'exit 143' TERM
-fi
-# Use an independent instance of Termux’s proven AAudio backend.
-if ! service_running "$LOGDIR/audio.pid" pulseaudio ||
-   ! timeout 2 "$PREFIX/bin/pactl" --server="unix:$TMPDIR/pulse/native" info >/dev/null 2>&1; then
- if service_running "$LOGDIR/audio.pid" pulseaudio; then
-  read -r audio_pid < "$LOGDIR/audio.pid"
-  sudo kill -KILL "$audio_pid"
- fi
- "$BASE/start-audio.sh"
 fi
 # Start our private display daemon; wait for a NEW listening socket, not a stale one.
 if [[ ! -S "$TMPDIR/anland/display_daemon.sock" ]] || ! service_running "$LOGDIR/daemon.pid" anland; then
@@ -203,8 +253,6 @@ if [[ $graphical == 1 ]]; then
 else
  exec su -c "$PREFIX/bin/unshare --mount --propagation private /system/bin/sh $BASE/enter-chroot.sh $mode"
 fi
-
-
 END_ANLAND_SH
 chmod 700 "$BASE/anland.sh.new"
 mv -f "$BASE/anland.sh.new" "$BASE/anland.sh"
@@ -228,31 +276,15 @@ while IFS=: read -r LOGIN PASSWORD USER_UID USER_GID DESCRIPTION USER_HOME USER_
  fi
 done < "$ROOT/etc/passwd"
 case "$MODE" in
- safe-mode|rename-user|maintenance|build-backend) ;;
+ safe-mode|rename-user) ;;
  *) [ -n "$CHROOT_USER" ] || { echo 'Anland desktop account not found.' >&2; exit 1; } ;;
 esac
-if [ "$MODE" = session-command ]; then
- for proc in /proc/[0-9]*; do
-  [ "$(readlink "$proc/root" 2>/dev/null || true)" = "$ROOT" ] || continue
-  [ "$(cat "$proc/comm" 2>/dev/null || true)" = kwin_wayland ] || continue
-  exec "$PREFIX/bin/nsenter" -t "${proc##*/}" -m chroot "$ROOT" /usr/bin/env -i HOME=/root PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin /bin/su - "$CHROOT_USER" -c 'export XDG_RUNTIME_DIR=/run/anland/$(id -u); export DBUS_SESSION_BUS_ADDRESS="$(cat "$XDG_RUNTIME_DIR/session-bus-address")"; export WAYLAND_DISPLAY=wayland-0 DISPLAY=:1 QT_QPA_PLATFORM=wayland; exec bash /tmp/session-command.sh'
- done
- echo 'No KDE session running.' >&2
- exit 1
-fi
-if [ "$MODE" = desktop ] || [ "$MODE" = weston ] || [ "$MODE" = test ] || [ "$MODE" = benchmark ] || [ "$MODE" = godot ]; then
+if [ "$MODE" = desktop ] || [ "$MODE" = weston ]; then
  if /system/bin/grep -Eq "[[:space:]]@?/tmp/\.X11-unix/X1$" /proc/net/unix; then
   echo "Display :1 is already in use. Refusing to interfere with that session." >&2
   exit 1
  fi
  /system/bin/cmd activity start -n com.anland.termux/.MainActivity </dev/null >/dev/null 2>&1 || echo 'Open Anland Termux to view the desktop.'
-fi
-if [ "$MODE" = godot ]; then
- for proc in /proc/[0-9]*; do
-  [ "$(readlink "$proc/root" 2>/dev/null || true)" = "$ROOT" ] || continue
-  [ "$(cat "$proc/comm" 2>/dev/null || true)" = weston ] || continue
-  exec "$PREFIX/bin/nsenter" -t "${proc##*/}" -m chroot "$ROOT" /usr/bin/env -i HOME=/root PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin /bin/su - "$CHROOT_USER" -c 'exec godot --project-manager > "$HOME/anland-logs/godot.log" 2>&1'
- done
 fi
 # This script runs inside a private mount namespace created by the launcher.
 mount --bind "$ROOT" "$ROOT"
@@ -274,6 +306,10 @@ mkdir -p "$ROOT/tmp/.ICE-unix"
 chown 0:0 "$ROOT/tmp/.ICE-unix"
 chmod 1777 "$ROOT/tmp/.ICE-unix"
 if [ -n "$CHROOT_USER" ]; then
+ # The chroot user owns the single PipeWire Pulse endpoint.
+ mkdir -p "$ROOT/tmp/pulse"
+ chown "$DESKTOP_UID:$DESKTOP_GID" "$ROOT/tmp/pulse"
+ chmod 700 "$ROOT/tmp/pulse"
  for runtime in "$ROOT/run/anland/$DESKTOP_UID" "$ROOT/run/user/$DESKTOP_UID"; do
   mkdir -p "$runtime"
   chown "$DESKTOP_UID:$DESKTOP_GID" "$runtime"
@@ -293,133 +329,23 @@ case "$MODE" in
  echo 'Run rename_user.sh to rename the desktop account. Type exit when finished.'
  exec chroot "$ROOT" /usr/bin/env -i HOME=/root USER=root LOGNAME=root TERM=xterm-256color LANG=en_US.UTF-8 PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin PS1='Anland-safe \w # ' /bin/bash --noprofile --norc -i ;;
  rename-user) exec chroot "$ROOT" /usr/bin/env -i HOME=/root PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin /bin/bash /opt/rename_user.sh ;;
- maintenance)
- cp /data/data/com.termux/files/home/anland-termux/maintenance.sh "$ROOT/tmp/anland-maintenance.sh"
- exec chroot "$ROOT" /usr/bin/env -i HOME=/root DEBIAN_FRONTEND=noninteractive PATH=/opt/lfdevs/anland:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin /bin/bash /tmp/anland-maintenance.sh ;;
- godot)
- cp /data/data/com.termux/files/home/anland-termux/benchmark-session.sh "$ROOT/usr/local/bin/anland-benchmark-session"
- chmod 755 "$ROOT/usr/local/bin/anland-benchmark-session"
- COMMAND='exec /usr/local/bin/anland-benchmark-session godot' ;;
- install-godot)
- mkdir -p "$ROOT/opt/godot"
- cp /data/data/com.termux/files/home/anland-termux/downloads/godot4/Godot* "$ROOT/opt/godot/godot"
- chmod 755 "$ROOT/opt/godot/godot"
- cp /data/data/com.termux/files/home/anland-termux/godot-chroot "$ROOT/usr/local/bin/godot"
- chmod 755 "$ROOT/usr/local/bin/godot"
- printf '#!/bin/bash\npkill -TERM -u "$(id -u)" -x weston\n' > "$ROOT/usr/local/bin/anland-exit"
- chmod 755 "$ROOT/usr/local/bin/anland-exit"
- exec chroot "$ROOT" /usr/bin/env -i HOME=/root DEBIAN_FRONTEND=noninteractive PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin /bin/bash -c 'apt-get -o APT::Sandbox::User=root install -y --no-install-recommends libx11-6 libxcursor1 libxinerama1 libxi6 libxrandr2 libasound2t64 libfontconfig1 libgl1 libwayland-client0 libdecor-0-0; /opt/godot/godot --headless --version' ;;
- build-backend)
- mkdir -p "$ROOT/opt/anland-build"
- mount --bind /data/data/com.termux/files/home/anland-termux/weston-source "$ROOT/opt/anland-build"
- cp /data/data/com.termux/files/home/anland-termux/build-backend.sh "$ROOT/tmp/build-anland-backend.sh"
- exec chroot "$ROOT" /usr/bin/env -i HOME=/root PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin /bin/bash /tmp/build-anland-backend.sh ;;
- benchmark)
- cp /data/data/com.termux/files/home/anland-termux/benchmark-session.sh "$ROOT/usr/local/bin/anland-benchmark-session"
- chmod 755 "$ROOT/usr/local/bin/anland-benchmark-session"
- COMMAND='exec /usr/local/bin/anland-benchmark-session' ;;
- install-benchmark) exec chroot "$ROOT" /usr/bin/env -i HOME=/root DEBIAN_FRONTEND=noninteractive PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin /bin/bash -c 'getent group android_inet >/dev/null || groupadd -g 3003 android_inet; usermod -aG android_inet "$1"; usermod -aG android_inet _apt; apt-get -o APT::Sandbox::User=root -o APT::Update::Error-Mode=any update && apt-get -o APT::Sandbox::User=root install -y --no-install-recommends glmark2-wayland glmark2-es2-wayland gdb adwaita-icon-theme' bash "$CHROOT_USER" ;;
  desktop) COMMAND='export FD_MESA_DEBUG=noubwc,notile; mkdir -p "$HOME/anland-logs"; exec /usr/local/bin/startplasma-anland' ;;
  weston) COMMAND='export ANLAND_WESTON_SCALE=2 FD_MESA_DEBUG=noubwc,notile; exec startweston-anland' ;;
- test) COMMAND='export ANLAND_WESTON_SCALE=2 ANLAND_WESTON_START_ATTEMPTS=1 FD_MESA_DEBUG=noubwc,notile; exec timeout 20s startweston-anland' ;;
  shell) COMMAND='exec bash -l' ;;
- check) COMMAND='set -e; cat /etc/os-release; id; command -v sudo; weston --version; command -v glmark2-wayland; glmark2-wayland --help >/dev/null; test -S /tmp/anland/display_daemon.sock; test -r /dev/kgsl-3d0; echo "Chroot checks passed"' ;;
  *) echo 'Unknown mode' >&2; exit 2 ;;
 esac
 exec chroot "$ROOT" /usr/bin/env -i HOME=/root TERM=xterm-256color LANG=en_US.UTF-8 PATH=/opt/lfdevs/anland:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin /bin/su - "$CHROOT_USER" -c "$COMMAND"
-
-
 END_ENTER_CHROOT_SH
 chmod 700 "$BASE/enter-chroot.sh.new"
 mv -f "$BASE/enter-chroot.sh.new" "$BASE/enter-chroot.sh"
 
-# start-audio.sh
-cat > "$BASE/start-audio.sh.new" <<'END_START_AUDIO_SH'
-#!/data/data/com.termux/files/usr/bin/bash
-# Independent instance of the same Android AAudio backend used by Termux-X11.
-set -euo pipefail
-BASE=/data/data/com.termux/files/home/anland-termux
-PREFIX=/data/data/com.termux/files/usr
-export TMPDIR="$BASE/runtime"
-export PULSE_RUNTIME_PATH="$BASE/audio-runtime"
-export PULSE_STATE_PATH="$BASE/audio-state"
-export PULSE_CONFIG_PATH="$BASE/audio-config"
-mkdir -p "$PULSE_RUNTIME_PATH" "$PULSE_STATE_PATH" "$PULSE_CONFIG_PATH" "$TMPDIR/pulse"
-chmod 700 "$PULSE_RUNTIME_PATH" "$PULSE_STATE_PATH" "$PULSE_CONFIG_PATH"
-chmod 755 "$TMPDIR/pulse"
-# No default startup file, shared PID, shared socket, or TCP listener.
-nohup "$PREFIX/bin/pulseaudio" -n --daemonize=no --use-pid-file=no \
- --exit-idle-time=-1 --disable-shm=yes --disallow-exit=yes \
- --load='module-aaudio-sink sink_name=anland-speaker' \
- --load="module-native-protocol-unix auth-anonymous=1 socket=$TMPDIR/pulse/native" \
- >"$BASE/logs/audio.log" 2>&1 </dev/null 9>&- &
-pid=$!
-echo "$pid" > "$BASE/logs/audio.pid"
-for ((i=0; i<50; i++)); do
- kill -0 "$pid" 2>/dev/null || { cat "$BASE/logs/audio.log"; exit 1; }
- if timeout 2 "$PREFIX/bin/pactl" --server="unix:$TMPDIR/pulse/native" info >/dev/null 2>&1; then exit 0; fi
- sleep 0.1
-done
-echo "AnLand audio did not become ready. See $BASE/logs/audio.log" >&2
-exit 1
-
-
-END_START_AUDIO_SH
-chmod 700 "$BASE/start-audio.sh.new"
-mv -f "$BASE/start-audio.sh.new" "$BASE/start-audio.sh"
-
-# benchmark-session.sh
-cat > "$BASE/benchmark-session.sh.new" <<'END_BENCHMARK_SESSION_SH'
-#!/bin/bash
-set -euo pipefail
-export XDG_RUNTIME_DIR=/run/user/$(id -u)
-export WAYLAND_DISPLAY=wayland-anland
-export ANLAND_WESTON_SCALE=2 ANLAND_WESTON_START_ATTEMPTS=1
-export MESA_LOADER_DRIVER_OVERRIDE=kgsl TURNIP_KMD=kgsl GALLIUM_DRIVER=freedreno FD_FORCE_KGSL=1
-export FD_MESA_DEBUG=noubwc,notile
-export XCURSOR_THEME=Adwaita
-mkdir -p "$HOME/anland-logs"
-if [[ ${ANLAND_DEBUG:-0} == 1 ]]; then
- weston() {
-  command gdb --batch -ex 'set pagination off' -ex run -ex 'thread apply all bt' --args /usr/bin/weston "$@"
- }
- export -f weston
-fi
-startweston-anland >"$HOME/anland-logs/weston-debug.log" 2>&1 &
-session_pid=$!
-benchmark_pid=
-cleanup() {
- [[ -z $benchmark_pid ]] || kill "$benchmark_pid" 2>/dev/null || true
- pkill -TERM -x -u "$(id -u)" weston 2>/dev/null || true
- kill "$session_pid" 2>/dev/null || true
-}
-trap cleanup EXIT INT TERM
-for ((i=0;i<300;i++)); do
- [[ -S "$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY" ]] && break
- kill -0 "$session_pid" 2>/dev/null || { tail -n 60 "$HOME/anland-logs/weston-debug.log"; exit 1; }
- sleep 0.1
-done
-[[ -S "$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY" ]] || { echo 'Wayland did not start'; exit 1; }
-if [[ ${1:-benchmark} == godot ]]; then
- godot --project-manager >"$HOME/anland-logs/godot.log" 2>&1 &
-else
- EGL_PLATFORM=wayland glmark2-wayland --size 1280x800 --run-forever >"$HOME/anland-logs/glmark2.log" 2>&1 &
-fi
-benchmark_pid=$!
-echo "${1:-glmark2} is running in the Anland display."
-wait "$session_pid"
-
-
-END_BENCHMARK_SESSION_SH
-chmod 700 "$BASE/benchmark-session.sh.new"
-mv -f "$BASE/benchmark-session.sh.new" "$BASE/benchmark-session.sh"
 # Install the shared shell cleanup helper.
 bash "$SCRIPT_DIR/uninstall-chroot-anland.sh" --print-stop-script > "$BASE/stop-chroot.sh.new"
 chmod 700 "$BASE/stop-chroot.sh.new"
 mv -f "$BASE/stop-chroot.sh.new" "$BASE/stop-chroot.sh"
 rm -f "$HOME/anland" "$HOME/anland.sh"
-# Remove the obsolete helper from installations created with the earlier installer.
-rm -f "$BASE/stop-chroot.cjs"
+# Remove obsolete runtime helpers when upgrading an older installation.
+rm -f "$BASE/stop-chroot.cjs" "$BASE/start-audio.sh" "$BASE/benchmark-session.sh"
 mkdir -p "$MANAGER"
 for FILE in uninstall-chroot-anland.sh restore-chroot-anland.sh; do
  if [[ $(realpath "$SCRIPT_DIR/$FILE") != "$MANAGER/$FILE" ]]; then
@@ -427,6 +353,11 @@ for FILE in uninstall-chroot-anland.sh restore-chroot-anland.sh; do
  fi
 done
 
+fi
+if [[ $MODE == --runtime-only ]]; then
+ write_restore_shortcut
+ echo 'AnLand runtime updated; Ubuntu data and shortcuts were kept.'
+ exit 0
 fi
 # Number scripts and matching icons; accept legacy and numbered snapshots.
 mkdir -p "$HOME/.shortcuts/icons"
@@ -479,5 +410,6 @@ done <<'SHORTCUT_NAMES'
 SHORTCUT_NAMES
 # Save only this desktop's numbered shortcuts and their matching icons.
 sed -i 's#~/.shortcuts/anland-\*\.sh#~/.shortcuts/[0-9]*-anland-*.sh#g; s#~/.shortcuts/icons/anland-\*\.sh\.png#~/.shortcuts/icons/[0-9]*-anland-*.sh.png#g' "$HOME/.shortcuts/3-anland-save-snapshot.sh"
-# Keep the saved loader rather than replacing user changes with a default wrapper.
+# The snapshot may contain an old embedded installer; always use the maintained loader.
+write_restore_shortcut
 echo 'Ubuntu-AnLand shortcuts ready. Use 1-anland-run.'
