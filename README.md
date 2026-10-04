@@ -70,7 +70,7 @@ scripts to download/install/update both MESA and WINE
 apt update
 apt upgrade
 apt install curl
-curl -L -o install_ubuntu_chroot.sh \
+curl -L -o monolitic-chroot-install.sh \
   https://raw.githubusercontent.com/Dr4kzor/Chroot_Ubuntu/main/monolitic-chroot-install.sh
 chmod +x monolitic-chroot-install.sh
 ./monolitic-chroot-install.sh
