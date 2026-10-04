@@ -1,4 +1,4 @@
-# There are 2 CHROOTS available that you can install and test at the same time (no conflit between their configs)
+# There are 2 CHROOTS available that you can install and test at the same time (no conflit between their configs, and both can be running at the exact same time!)
 
 ## (1) - CHROOT TERMUX-X11 with XFCE4 (battle tested and extremely stable but slower)
 Here we use half the native screen resolution and glmark2 yields 2500 FPS to 3000 FPS
@@ -54,38 +54,38 @@ wine-staging_11.12~resolute-1_amd64 is installed
 
 
 
+## (2) Anland This ROOTFS contains:
+Ubuntu 26
+
+KDE
+
+Box64-Android
+
+scripts to download/install/update both MESA and WINE
 
 
 
-## (1) - TERMUX-X11 Download and run install script
+## Script for install/uninstall/update of both CHROOT versions
 ```bash
 apt update
 apt upgrade
 apt install curl
-curl -L -o install_ubuntu_chroot.sh \
-  https://raw.githubusercontent.com/Dr4kzor/Chroot_Ubuntu/main/install_ubuntu_chroot.sh
-chmod +x install_ubuntu_chroot.sh
-./install_ubuntu_chroot.sh
+curl -L -o monolitic-chroot-install.sh \
+  https://raw.githubusercontent.com/Dr4kzor/Chroot_Ubuntu/main/monolitic-chroot-install.sh
+chmod +x monolitic-chroot-install.sh
+./monolitic-chroot-install.sh
 
 ```
+### Note: this install script will download and install termux-x11 or anland and install in termux and android automatically!
+The last install step is finding a network capable UID, and fixing all old UIDs to match the network able one, so installation last steps can take couple minutes if the default ROOTFS user UID didn't have internet access.
 
 
-## (1) - TERMUX-X11 Download Uninstall Script
-```bash
-apt update
-apt upgrade
-apt install curl
-curl -L -o uninstall_ubuntu_chroot.sh \
-  https://raw.githubusercontent.com/Dr4kzor/Chroot_Ubuntu/main/unistall_ubuntu_chroot.sh
-chmod +x uninstall_ubuntu_chroot.sh
-
-```
 
 
 # (1) - TERMUX-X11 IMPORTANT!
-## (1) - TERMUX-X11  Download and install Termux-X11 (Mandatory)
+## (1) - TERMUX-X11  Download and install Termux-X11 (Now automated by install script)
 https://github.com/termux/termux-x11
-## (1) - TERMUX-X11  Set Termux-X11 display scale to 200%
+## (1) - TERMUX-X11  Set Termux-X11 display scale to 200% (recomended, but optional)
 
 ## (1) - TERMUX-X11  Download and install Termux-Widget (Optional) makes it possible to add scripts with icons to homescreen
 https://github.com/termux/termux-widget
@@ -155,33 +155,11 @@ run "./update_mesa.sh"
 
 ## (2) - ANland KDE is around 2X faster rendering frames even at 2X resolution meaning it may have more iddle time in the GPU and CPU allowing for more batterie life
 
-## (2) - ANland Download and run install script
-```bash
-apt update
-apt upgrade
-apt install curl
-curl -L -o install_ubuntu_chroot.sh \
-  https://raw.githubusercontent.com/Dr4kzor/Chroot_Ubuntu/main/install-ubuntu-anland.sh
-chmod +x install_ubuntu_chroot.sh
-./install-ubuntu-anland.sh
 
-```
-
-
-## (2) - ANland Download Uninstall Script
-```bash
-apt update
-apt upgrade
-apt install curl
-curl -L -o uninstall_ubuntu_chroot.sh \
-  https://raw.githubusercontent.com/Dr4kzor/Chroot_Ubuntu/main/uninstall-anland.sh
-chmod +x uninstall-anland.sh
-
-```
 
 ## (2) - ANland wine and mesa
 run update_mesa.sh to install the latest version
-run update_winr.sh to install wine or change wine version (by default wine container should survive an update or version change)
+run update_wine.sh to install wine or change wine version (by default wine container should survive an update or version change)
 
 
 ## (2) - ANland setup
@@ -202,4 +180,18 @@ To download and install FEX please visite https://github.com/FEX-Emu/FEX/tree/ma
 
 ## To run SU command:
 If you want to use the cmd "su" you must run "sudo su" instead of just "su"
+
+
+## This is only possible thanks to other projects:
+Termux from: https://github.com/termux/termux-app
+
+ANland display from: https://github.com/lfdevs/anland-termux
+
+Termux-X11 display from: https://github.com/termux/termux-x11
+
+Mesa GPU drivers from: https://github.com/lfdevs/mesa-for-android-container
+
+Box64 from: https://github.com/ptitseb/box64
+
+Wine from: https://www.winehq.org
 
