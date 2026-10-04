@@ -115,6 +115,7 @@ root_repair() {
   sync -f "$STATE/pending.tmp"; mv -- "$STATE/pending.tmp" "$STATE/pending"
  fi
  if [[ $PHASE == prepared ]]; then
+  echo "$NAME: recording ownership, ACLs and capabilities (scanning rootfs)..."
   find "$ROOT" -xdev "${PRUNE[@]}" -uid "$OLD" -print0 > "$JOB/owned.files"
   # ACL records retain ownership, modes, and setuid/setgid flags as well.
   find "$ROOT" -xdev "${PRUNE[@]}" -uid "$OLD" ! -type l -print0 > "$JOB/owned.acl.files"
@@ -130,32 +131,30 @@ root_repair() {
  fi
  if [[ $(linux /usr/bin/id -u "$LOGIN") == "$OLD" ]]; then linux /usr/sbin/usermod -u "$NEW" "$LOGIN"; fi
  write_phase ownership
- while IFS= read -r -d '' FILE; do
-  [[ -e $FILE || -L $FILE ]] || continue
-  chown -h --from="$OLD" "$NEW" -- "$FILE"
- done < "$JOB/owned.files"
- # Apply records individually: newer ACL --restore -P needs openat2, which
- # Android 13's 4.19 kernel does not provide. Validate paths before each write.
- local ACL_PATH= ACL_TEXT= ACL_FLAGS=--- LINE
- restore_acl_record() {
-  [[ -n $ACL_PATH ]] || return 0
-  [[ $ACL_PATH == "$ROOT" || $ACL_PATH == "$ROOT/"* ]] || return 1
-  [[ ! -L $ACL_PATH && $(realpath -e "$ACL_PATH") == "$ACL_PATH" ]] || { echo 'ACL path changed during migration.'; return 1; }
-  setfacl --set-file=- -- "$ACL_PATH" <<< "$ACL_TEXT"
-  chmod u-s,g-s,o-t -- "$ACL_PATH"
-  [[ ${ACL_FLAGS:0:1} != s ]] || chmod u+s -- "$ACL_PATH"
-  [[ ${ACL_FLAGS:1:1} != s ]] || chmod g+s -- "$ACL_PATH"
-  [[ ${ACL_FLAGS:2:1} != t ]] || chmod o+t -- "$ACL_PATH"
- }
+ echo "$NAME: updating file ownership in batches..."
+ xargs -0 -r chown -h --from="$OLD" "$NEW" -- < "$JOB/owned.files"
+ # --restore -P requires openat2, unavailable on older Android kernels.
+ # Validate every physical path in batches before ordinary --restore.
+ # The live-process check above keeps the chroot stopped during migration.
+ echo "$NAME: validating paths and restoring permissions in batches..."
+ local ACL_PATH= LINE
+ : > "$JOB/restore.paths"
  while IFS= read -r LINE || [[ -n $LINE ]]; do
   case $LINE in
-   '# file: '*) restore_acl_record; printf -v ACL_PATH '%b' "${LINE#\# file: }"; ACL_TEXT=; ACL_FLAGS=--- ;;
-   '# flags: '*) ACL_FLAGS=${LINE#\# flags: } ;;
-   '#'*|'') ;;
-   *) ACL_TEXT+="$LINE"$'\n' ;;
+   '# file: '*)
+    printf -v ACL_PATH '%b' "${LINE#\# file: }"
+    [[ $ACL_PATH == "$ROOT" || $ACL_PATH == "$ROOT/"* ]] || return 1
+    [[ ! -L $ACL_PATH ]] || { echo 'ACL path became a symlink.'; return 1; }
+    printf '%s\0' "$ACL_PATH" >> "$JOB/restore.paths"
+    ;;
   esac
  done < "$JOB/permissions.after"
- restore_acl_record
+ xargs -0 -r realpath -e -z -- < "$JOB/restore.paths" > "$JOB/restore.canonical"
+ cmp -s "$JOB/restore.paths" "$JOB/restore.canonical" || { echo 'ACL path changed during migration.'; return 1; }
+ if ! setfacl --restore="$JOB/permissions.after" 2> "$JOB/restore.stderr"; then
+  cat "$JOB/restore.stderr" >&2; return 1
+ fi
+ echo "$NAME: restoring capabilities and checking TCP/UDP..."
  local CAP_PATH= CAP_VALUE
  while IFS= read -r LINE || [[ -n $LINE ]]; do
   case $LINE in
