@@ -7,7 +7,8 @@ ROOT=/data/local/anland-ubuntu26
 BASE="$HOME/anland-termux"
 MANAGER="$HOME/.local/share/chroot-manager/anland"
 MODE=${1:-}
-case "$MODE" in --check|--overwrite) shift ;; esac
+case "$MODE" in --check|--overwrite|--shortcuts-only) shift ;; esac
+if [[ $MODE != --shortcuts-only ]]; then
 BACKUP=${1:-$HOME/ubuntu-anland-backup.tar.gz}
 BACKUP=$(realpath "$BACKUP")
 [[ -f $BACKUP ]] || { echo "Snapshot not found: $BACKUP"; exit 1; }
@@ -426,22 +427,57 @@ for FILE in uninstall-chroot-anland.sh restore-chroot-anland.sh; do
  fi
 done
 
-# Restore the existing shortcut icons from the unchanged snapshot.
-for NAME in start stop safe-mode save-backup restore-backup; do
- sudo cp "$ROOT/opt/.shortcuts-anland/anland-$NAME.sh" "$HOME/.shortcuts/anland-$NAME.sh.new"
- sudo cp "$ROOT/opt/.shortcuts-anland/icons/anland-$NAME.sh.png" "$HOME/.shortcuts/icons/anland-$NAME.sh.png"
- sudo chown "$(id -u):$(id -g)" "$HOME/.shortcuts/anland-$NAME.sh.new" "$HOME/.shortcuts/icons/anland-$NAME.sh.png"
- chmod 755 "$HOME/.shortcuts/anland-$NAME.sh.new"
- chmod 644 "$HOME/.shortcuts/icons/anland-$NAME.sh.png"
- mv -f "$HOME/.shortcuts/anland-$NAME.sh.new" "$HOME/.shortcuts/anland-$NAME.sh"
- sed -i 's#/data/data/com.termux/files/home/anland\([[:space:]]\|$\)#/data/data/com.termux/files/home/anland-termux/anland.sh\1#g; s#\./anland\([[:space:]]\|$\)#/data/data/com.termux/files/home/anland-termux/anland.sh\1#g' "$HOME/.shortcuts/anland-$NAME.sh"
-done
-# Restore a saved backup, or ask for one; installer downloads are temporary.
-cat > "$HOME/.shortcuts/anland-restore-backup.sh" <<'RESTORE_SHORTCUT'
-#!/data/data/com.termux/files/usr/bin/bash
-BACKUP="$HOME/ubuntu-anland-backup.tar.gz"
-[[ -f $BACKUP ]] || read -r -p 'Snapshot path: ' BACKUP
-exec bash "$HOME/.local/share/chroot-manager/anland/restore-chroot-anland.sh" "$BACKUP"
-RESTORE_SHORTCUT
-chmod 755 "$HOME/.shortcuts/anland-restore-backup.sh"
-echo 'Ubuntu-AnLand restored. Use the Start shortcut.'
+fi
+# Number scripts and matching icons; accept legacy and numbered snapshots.
+mkdir -p "$HOME/.shortcuts/icons"
+while read -r NUMBER LABEL LEGACY; do
+ NAME="$NUMBER-anland-$LABEL.sh"
+ SOURCE=
+ if [[ $MODE == --shortcuts-only ]]; then
+  for OLD in "$NAME" "anland-$LEGACY.sh"; do
+   [[ ! -f $HOME/.shortcuts/$OLD ]] || { SOURCE="$HOME/.shortcuts/$OLD"; break; }
+  done
+ fi
+ if [[ -n $SOURCE ]]; then
+  cp "$SOURCE" "$HOME/.shortcuts/$NAME.new"
+ else
+  for OLD in "$NAME" "anland-$LEGACY.sh"; do
+   if sudo test -f "$ROOT/opt/.shortcuts-anland/$OLD"; then SOURCE="$ROOT/opt/.shortcuts-anland/$OLD"; break; fi
+  done
+  [[ -n $SOURCE ]] || { echo "Missing snapshot shortcut: $NAME" >&2; exit 1; }
+  sudo cp "$SOURCE" "$HOME/.shortcuts/$NAME.new"
+  sudo chown "$(id -u):$(id -g)" "$HOME/.shortcuts/$NAME.new"
+ fi
+ SCRIPT_SOURCE=$SOURCE
+ ICON="$HOME/.shortcuts/icons/$NAME.png"
+ if [[ $MODE != --shortcuts-only || ! -f $ICON ]]; then
+  SOURCE=
+  if [[ $MODE == --shortcuts-only && -f $HOME/.shortcuts/icons/anland-$LEGACY.sh.png ]]; then
+   cp "$HOME/.shortcuts/icons/anland-$LEGACY.sh.png" "$ICON"
+  else
+   for OLD in "$NAME" "anland-$LEGACY.sh"; do
+    if sudo test -f "$ROOT/opt/.shortcuts-anland/icons/$OLD.png"; then SOURCE="$ROOT/opt/.shortcuts-anland/icons/$OLD.png"; break; fi
+   done
+   [[ -n $SOURCE ]] || { echo "Missing snapshot icon: $NAME" >&2; exit 1; }
+   sudo cp "$SOURCE" "$ICON"
+   sudo chown "$(id -u):$(id -g)" "$ICON"
+  fi
+ fi
+ chmod 755 "$HOME/.shortcuts/$NAME.new"
+ chmod 644 "$ICON"
+ mv -f "$HOME/.shortcuts/$NAME.new" "$HOME/.shortcuts/$NAME"
+ if [[ ${SCRIPT_SOURCE##*/} == anland-*.sh ]]; then
+  sed -i 's#/data/data/com.termux/files/home/anland\([[:space:]]\|$\)#/data/data/com.termux/files/home/anland-termux/anland.sh\1#g; s#\./anland\([[:space:]]\|$\)#/data/data/com.termux/files/home/anland-termux/anland.sh\1#g' "$HOME/.shortcuts/$NAME"
+ fi
+ rm -f "$HOME/.shortcuts/anland-$LEGACY.sh" "$HOME/.shortcuts/icons/anland-$LEGACY.sh.png"
+done <<'SHORTCUT_NAMES'
+1 run start
+2 safe-mode safe-mode
+3 save-snapshot save-backup
+4 load-snapshot restore-backup
+5 stop stop
+SHORTCUT_NAMES
+# Save only this desktop's numbered shortcuts and their matching icons.
+sed -i 's#~/.shortcuts/anland-\*\.sh#~/.shortcuts/[0-9]*-anland-*.sh#g; s#~/.shortcuts/icons/anland-\*\.sh\.png#~/.shortcuts/icons/[0-9]*-anland-*.sh.png#g' "$HOME/.shortcuts/3-anland-save-snapshot.sh"
+# Keep the saved loader rather than replacing user changes with a default wrapper.
+echo 'Ubuntu-AnLand shortcuts ready. Use 1-anland-run.'

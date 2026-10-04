@@ -2,7 +2,7 @@
 # Prepare Termux, install the X11 app/package, then load the regular Ubuntu snapshot.
 set -euo pipefail
 SCRIPT_DIR=$(cd -- "$(dirname -- "$0")" && pwd)
-SNAPSHOT_URL=https://github.com/Dr4kzor/Chroot_Ubuntu/releases/latest/download/ubuntu-backup.tar.gz
+SNAPSHOT_URL=https://github.com/Dr4kzor/Chroot_Ubuntu/releases/latest/download/ubuntu-termux-x11-backup.tar.gz
 read -r -p 'Install/reinstall Termux-X11 Ubuntu? Existing X11 Ubuntu data will be replaced. [y/N] ' ANSWER
 [[ $ANSWER == [yY] || $ANSWER == [yY][eE][sS] ]] || exit 0
 apt update
@@ -21,7 +21,7 @@ WORK=$(mktemp -d "$PREFIX/tmp/chroot-termux-x11-install.XXXXXX")
 trap 'rm -rf "$WORK"' EXIT
 BACKUP=${1:-}
 if [[ -z $BACKUP ]]; then
- BACKUP="$WORK/ubuntu-backup.tar.gz"
+ BACKUP="$WORK/ubuntu-termux-x11-backup.tar.gz"
  echo "Downloading $SNAPSHOT_URL"
  curl -fL --retry 3 "$SNAPSHOT_URL" -o "$BACKUP"
 fi

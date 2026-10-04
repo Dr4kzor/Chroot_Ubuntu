@@ -125,6 +125,9 @@ fi
 for NAME in start stop safe-mode save-backup restore-backup; do
  rm -f "$HOME/.shortcuts/anland-$NAME.sh" "$HOME/.shortcuts/icons/anland-$NAME.sh.png"
 done
+for NAME in 1-anland-run 2-anland-safe-mode 3-anland-save-snapshot 4-anland-load-snapshot 5-anland-stop; do
+ rm -f "$HOME/.shortcuts/$NAME.sh" "$HOME/.shortcuts/icons/$NAME.sh.png"
+done
 rm -f "$HOME/anland" "$HOME/anland.sh"
 sudo rm -rf "$BASE"
 echo 'AnLand uninstalled. Backups and your other Ubuntu were kept.'

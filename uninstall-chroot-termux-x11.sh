@@ -11,4 +11,8 @@ for ACTION in run safe-mode backup restore; do
  rm -f "$HOME/.shortcuts/$ACTION-chroot-termux-x11.sh" "$HOME/.shortcuts/icons/$ACTION-chroot-termux-x11.sh.png"
 done
 rm -f "$HOME/.shortcuts/"{1-ubuntu,2-safe_mode,3-save_ubuntu_snapshot,4-load_ubuntu_snapshot}.sh
+rm -f "$HOME/.shortcuts/icons/"{1-ubuntu,2-safe_mode,3-save_ubuntu_snapshot,4-load_ubuntu_snapshot}.sh.png
+for NAME in 1-termux-x11-run 2-termux-x11-safe-mode 3-termux-x11-save-snapshot 4-termux-x11-load-snapshot 5-termux-x11-stop; do
+ rm -f "$HOME/.shortcuts/$NAME.sh" "$HOME/.shortcuts/icons/$NAME.sh.png"
+done
 echo 'Termux-X11 Ubuntu uninstalled. Backups and AnLand were kept.'
