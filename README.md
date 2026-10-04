@@ -1,4 +1,4 @@
-# There are 2 CHROOTS available that you can install and test at the same time (no conflit between their configs)
+# There are 2 CHROOTS available that you can install and test at the same time (no conflit between their configs, and both can be running at the exact same time!)
 
 ## (1) - CHROOT TERMUX-X11 with XFCE4 (battle tested and extremely stable but slower)
 Here we use half the native screen resolution and glmark2 yields 2500 FPS to 3000 FPS
