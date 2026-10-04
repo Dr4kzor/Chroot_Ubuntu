@@ -77,7 +77,7 @@ chmod +x monolitic-chroot-install.sh
 
 ```
 ### Note: this install script will download and install termux-x11 or anland and install in termux and android automatically!
-
+The last install step is finding a network capable UID, and fixing all old UIDs to match the network able one, so installation last steps can take couple minutes if the default ROOTFS user UID didn't have internet access.
 
 
 
