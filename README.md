@@ -61,12 +61,10 @@ KDE
 
 Box64-Android
 
-scripts to download/install/update both MESA and WINE
+scripts to download/install/update both MESA and WINE (after installing wine you can simply run .exe directly no need to manualy call box64 wine app.exe)
 
+ark zip unzip p7zip-full unrar for extracting files
 
-## (2) add this to make File browser open and extract files
-sudo apt install ark zip unzip p7zip-full unrar
-(This will be  added on next releases of the ROOTFS)
 
 
 
