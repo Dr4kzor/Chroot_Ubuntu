@@ -64,6 +64,12 @@ Box64-Android
 scripts to download/install/update both MESA and WINE
 
 
+## (2) add this to make File browser open and extract files
+sudo apt install ark zip unzip p7zip-full unrar
+(This will be  added on next releases of the ROOTFS)
+
+
+
 
 ## Script for install/uninstall/update of both CHROOT versions
 ```bash
