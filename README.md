@@ -199,6 +199,7 @@ Box64 from: https://github.com/ptitseb/box64
 
 Wine from: https://www.winehq.org
 
+PrimeFTP from: https://github.com/wolpi/prim-ftpd (allows regular chroot users to access android folders via the default file explorer)
 
 GPU Video decoding is pending aproval of pull request at https://github.com/lfdevs/mesa-for-android-container/pull/100
 WIP -> Decoding video using the GPU from: https://github.com/lfdevs/termux-va (requires mesa patch, it currently exists as a pull request, after it is merged we will add it to our project)
