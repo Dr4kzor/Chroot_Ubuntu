@@ -3,7 +3,7 @@
 ## (1) - CHROOT TERMUX-X11 with XFCE4 (battle tested and extremely stable but slower)
 Here we use half the native screen resolution and glmark2 yields 2500 FPS to 3000 FPS
 
-## (2) - CHROOT ANland with KDE (more recent but only tested for 2 days so far, no crashes or issues detected so far)
+## (2) - CHROOT ANland with KDE (more recent but only tested for 4 days so far, no crashes or issues detected so far)
 Here we use full native screen resolution and glmark2 yields 4300 FPS to 5500 FPS (you can reach 6000 FPS if you run apps directly avoiding using KDE)
 
 
