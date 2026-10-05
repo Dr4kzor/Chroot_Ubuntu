@@ -75,7 +75,7 @@ mkdir -p "$BASE/runtime/anland" "$BASE/logs" "$HOME/.shortcuts/icons"
 chmod 1777 "$BASE/runtime"
 chmod 711 "$BASE/runtime/anland"
 
-# Migrate older snapshots to the native compositor audio path.
+# Migrate older snapshots to the native audio path and KGSL GPU rendering.
 AUDIO_CONFIG=$(mktemp "$PREFIX/tmp/anland-audio-config.XXXXXX.sh")
 cat > "$AUDIO_CONFIG" <<'NATIVE_AUDIO_CONFIG'
 #!/system/bin/sh
@@ -89,6 +89,8 @@ rm -f "$CONF/pipewire.conf.d/95-anland-aaudio.conf.disabled" "$ROOT/usr/local/bi
 mkdir -p "$CONF/pipewire-pulse.conf.d" "$CONF/pipewire.conf.d"
 if [ -f "$ROOT/usr/local/bin/startplasma-anland" ]; then
  sed -i 's/# The Termux launcher supplies our independent Android AAudio server./# PipeWire Pulse clients use the compositor native audio bridge./' "$ROOT/usr/local/bin/startplasma-anland"
+ # Remove stale Pulse sockets on logout and require a live server on startup.
+ sed -i 's|"$XDG_RUNTIME_DIR/anland-pulse/native"|"${PULSE_RUNTIME_PATH:-/tmp/pulse}/native"|g; s|if \[\[ ! -S $PULSE_RUNTIME_PATH/native \]\]; then|if ! process_uses_pipewire_runtime pipewire-pulse; then\n        rm -f "$PULSE_RUNTIME_PATH/native"|' "$ROOT/usr/local/bin/startplasma-anland"
 fi
 cat > "$CONF/pipewire-pulse.conf.d/95-anland-native.conf" <<'PULSE_CONF'
 pulse.properties = {
@@ -99,14 +101,15 @@ pulse.properties = {
     pulse.min.quantum = 256/48000
 }
 PULSE_CONF
-cat > "$CONF/pipewire.conf.d/96-anland-latency.conf" <<'PIPEWIRE_CONF'
-context.properties = {
-    default.clock.rate = 48000
-    default.clock.quantum = 512
-    default.clock.min-quantum = 256
-    default.clock.max-quantum = 2048
-}
-PIPEWIRE_CONF
+# Firefox misidentifies the KGSL Mesa driver as software without a GPU DRM node.
+# Keep GPU WebRender as the default; users can override it in about:config.
+if [ -e /dev/kgsl-3d0 ] && [ -d "$ROOT/usr/lib/firefox/defaults/pref" ]; then
+ cat > "$ROOT/usr/lib/firefox/defaults/pref/anland-gpu.js" <<'FIREFOX_GPU_PREF'
+// ANland KGSL uses the Adreno GPU even when Firefox labels it software-unknown.
+pref("gfx.webrender.all", true);
+FIREFOX_GPU_PREF
+ chmod 644 "$ROOT/usr/lib/firefox/defaults/pref/anland-gpu.js"
+fi
 NATIVE_AUDIO_CONFIG
 if ! (unset LD_PRELOAD LD_LIBRARY_PATH; su -c "/system/bin/sh '$AUDIO_CONFIG'"); then
  rm -f "$AUDIO_CONFIG"
@@ -218,7 +221,7 @@ if [[ $graphical == 1 ]]; then
 fi
 # Start our private display daemon; wait for a NEW listening socket, not a stale one.
 if [[ ! -S "$TMPDIR/anland/display_daemon.sock" ]] || ! service_running "$LOGDIR/daemon.pid" anland; then
- nohup "$PREFIX/bin/anland" >"$LOGDIR/daemon.log" 2>&1 </dev/null 9>&- &
+ nohup "$PREFIX/bin/setsid" "$PREFIX/bin/anland" >"$LOGDIR/daemon.log" 2>&1 </dev/null 9>&- &
  echo $! > "$LOGDIR/daemon.pid"
  for ((i=0; i<50; i++)); do
   # The previous run may have left a socket. Wait for this daemon to listen.
@@ -233,7 +236,7 @@ service_running "$LOGDIR/daemon.pid" anland &&
  grep -q 'daemon: listening on ' "$LOGDIR/daemon.log" || { echo "Daemon failed; see $LOGDIR/daemon.log"; exit 1; }
 if ! service_running "$LOGDIR/bridge.pid" anland-compatible; then
  # This bridge connects the Termux daemon to the Anland Android app.
- nohup "$PREFIX/bin/anland-compatible" >"$LOGDIR/bridge.log" 2>&1 </dev/null 9>&- &
+ nohup "$PREFIX/bin/setsid" "$PREFIX/bin/anland-compatible" >"$LOGDIR/bridge.log" 2>&1 </dev/null 9>&- &
  echo $! > "$LOGDIR/bridge.pid"
 fi
 unset LD_PRELOAD LD_LIBRARY_PATH
@@ -291,6 +294,9 @@ mount --bind "$ROOT" "$ROOT"
 mount -o remount,bind,suid,dev "$ROOT"
 mount --bind /dev "$ROOT/dev"
 mount --bind /dev/pts "$ROOT/dev/pts"
+# Firefox and desktop applications need POSIX shared memory.
+mkdir -p "$ROOT/dev/shm"
+mount -t tmpfs -o mode=1777,size=512M,nosuid,nodev tmpfs "$ROOT/dev/shm"
 mount -t proc proc "$ROOT/proc"
 mount -t sysfs sysfs "$ROOT/sys"
 mount --bind /data/data/com.termux/files/home/anland-termux/runtime "$ROOT/tmp"
